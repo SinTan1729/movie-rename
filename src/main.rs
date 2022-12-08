@@ -30,10 +30,16 @@ impl MovieEntry {
     // Generate desired filename from movie entry
     fn rename_format(&self, mut format: String) -> String {
         format = format.replace("{title}", self.title.as_str());
-        if self.year.as_str() != "n/a" {
+        if self.year.as_str() != "N/A" {
             format = format.replace("{year}", self.year.as_str());
+        } else {
+            format = format.replace("{year}", "");
         }
-        format = format.replace("{director}", self.director.as_str());
+        if self.director.as_str() != "N/A" {
+            format = format.replace("{director}", self.director.as_str());
+        } else {
+            format = format.replace("{director}", "");
+        }
         format
     }
 }
@@ -169,7 +175,7 @@ fn main() {
             println!("{} -> {}", filename, new_name);
             // Only do the rename of --dry-run isn't passed
             if dry_run == false {
-                println!("Doing the actual rename.");
+                println!("Renaming...");
                 fs::rename(filename, new_name).expect("Unable to rename file.");
             }
         }
