@@ -1,5 +1,5 @@
 use load_file::{self, load_str};
-use std::{env, fmt, fs};
+use std::{env, fmt, fs, process::exit};
 use tmdb::{model::*, themoviedb::*};
 use torrent_name_parser::Metadata;
 use youchoose;
@@ -43,14 +43,35 @@ fn main() {
     let mut args = env::args();
     args.next();
     let filenames: Vec<String> = args.collect();
+
+    if filenames.contains(&"--help".to_string()) {
+        println!("The expected syntax is:");
+        println!("movie_rename <filename(s)> [--dry-run]");
+        println!(
+            "There needs to be a config file names movie_rename.conf in your $XDG_CONFIG_HOME."
+        );
+        println!("It should consist of two lines. The first line should have your TMDb API key.");
+        println!("The second line should have a pattern, that will be used for the rename.");
+        println!("In the pattern, the variables need to be enclosed in {{}}, the supported variables are `title`, `year` and `director`.");
+        println!(
+            "Extension is always kept. Default pattern is `{{title}} ({{year}}) - {{director}}`"
+        );
+        exit(0);
+    }
+
     let mut config_file = env::var("XDG_CONFIG_HOME").unwrap_or("$HOME".to_string());
     if config_file == String::from("$HOME") {
         config_file = env::var("$HOME").unwrap();
     }
     config_file.push_str("/movie_rename.conf");
     let mut config = load_str!(config_file.as_str()).lines();
-    let api_key = config.next().unwrap();
-    let pattern = config.next().unwrap();
+    let api_key = config.next().unwrap_or("");
+    let pattern = config.next().unwrap_or("{title} ({year}) - {director}");
+
+    if api_key == "" {
+        eprintln!("Error reading the config file. Pass --help to see help.");
+        exit(1);
+    }
 
     let tmdb = TMDb {
         api_key: api_key,
