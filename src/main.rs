@@ -1,5 +1,5 @@
 use load_file::{self, load_str};
-use std::{env, fmt};
+use std::{env, fmt, fs};
 use tmdb::{model::*, themoviedb::*};
 use torrent_name_parser::Metadata;
 use youchoose;
@@ -25,8 +25,11 @@ impl MovieEntry {
         }
     }
 
-    fn rename_format(&self) -> String {
-        format!("{} ({}) - {}", self.title, self.year, self.director)
+    fn rename_format(&self, mut format: String) -> String {
+        format = format.replace("{title}", self.title.as_str());
+        format = format.replace("{year}", self.year.as_str());
+        format = format.replace("{director}", self.director.as_str());
+        format
     }
 }
 
@@ -37,56 +40,70 @@ impl fmt::Display for MovieEntry {
 }
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
-    let key_file = &args[1];
-    let filename = &args[2];
-    let api_key = load_str!(key_file);
+    let mut args = env::args();
+    args.next();
+    let filenames: Vec<String> = args.collect();
+    let mut config_file = env::var("XDG_CONFIG_HOME").unwrap_or("$HOME".to_string());
+    if config_file == String::from("$HOME") {
+        config_file = env::var("$HOME").unwrap();
+    }
+    config_file.push_str("/movie_rename.conf");
+    let mut config = load_str!(config_file.as_str()).lines();
+    let api_key = config.next().unwrap();
+    let pattern = config.next().unwrap();
 
     let tmdb = TMDb {
         api_key: api_key,
         language: "en",
     };
+    for filename in filenames {
+        let metadata = Metadata::from(filename.as_str()).unwrap();
+        let results = tmdb
+            .search()
+            .title(metadata.title())
+            .year(metadata.year().unwrap() as u64)
+            .execute()
+            .unwrap()
+            .results;
 
-    let metadata = Metadata::from(filename).unwrap();
-    let results = tmdb
-        .search()
-        .title(metadata.title())
-        .year(metadata.year().unwrap() as u64)
-        .execute()
-        .unwrap()
-        .results;
+        let mut movie_list: Vec<MovieEntry> = Vec::new();
 
-    let mut movie_list: Vec<MovieEntry> = Vec::new();
-
-    for result in results {
-        let mut movie_details = MovieEntry::from(result);
-        let with_credits: Result<Movie, _> =
-            tmdb.fetch().id(movie_details.id).append_credits().execute();
-        if let Ok(movie) = with_credits {
-            match movie.credits {
-                Some(cre) => {
-                    let mut directors = cre.crew;
-                    directors.retain(|x| x.job == "Director");
-                    for person in directors {
-                        movie_details.director = person.name;
+        for result in results {
+            let mut movie_details = MovieEntry::from(result);
+            let with_credits: Result<Movie, _> =
+                tmdb.fetch().id(movie_details.id).append_credits().execute();
+            if let Ok(movie) = with_credits {
+                match movie.credits {
+                    Some(cre) => {
+                        let mut directors = cre.crew;
+                        directors.retain(|x| x.job == "Director");
+                        for person in directors {
+                            movie_details.director = person.name;
+                        }
                     }
+                    None => {}
                 }
-                None => {}
             }
+            movie_list.push(movie_details);
         }
-        movie_list.push(movie_details);
-    }
 
-    let mut menu = youchoose::Menu::new(movie_list.iter())
-        .preview(display)
-        .preview_label(filename.to_string());
-    let choice = menu.show()[0];
-    let mut new_name = vec![
-        movie_list[choice].rename_format(),
-        metadata.extension().unwrap_or("").to_string(),
-    ];
-    new_name.retain(|x| !x.is_empty());
-    println!("{}", new_name.join("."));
+        let mut menu = youchoose::Menu::new(movie_list.iter())
+            .preview(display)
+            .preview_label(filename.to_string());
+        let choice = menu.show()[0];
+        let mut new_name_vec = vec![
+            movie_list[choice].rename_format(pattern.to_string()),
+            metadata.extension().unwrap_or("").to_string(),
+        ];
+        new_name_vec.retain(|x| !x.is_empty());
+        let new_name = new_name_vec.join(".");
+        if filename == new_name {
+            println!("{} already has correct name.", filename);
+        } else {
+            println!("{} -> {}", filename, new_name);
+            fs::rename(filename, new_name).expect("Unable to rename file.");
+        }
+    }
 }
 
 fn display(movie: &MovieEntry) -> String {
