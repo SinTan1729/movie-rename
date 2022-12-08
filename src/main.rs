@@ -1,5 +1,5 @@
 use load_file::{self, load_str};
-use std::{env, fmt, fs, process::exit};
+use std::{collections::HashMap, env, fmt, fs, process::exit};
 use tmdb::{model::*, themoviedb::*};
 use torrent_name_parser::Metadata;
 use youchoose;
@@ -53,26 +53,10 @@ impl fmt::Display for MovieEntry {
 
 fn main() {
     // Read arguments from commandline
-    let mut args = env::args();
-    args.next();
-    let filenames: Vec<String> = args.collect();
+    let args: Vec<String> = env::args().collect();
 
-    // If --help is passed, show help and exit
-    if filenames.contains(&"--help".to_string()) {
-        println!("  The expected syntax is:");
-        println!("  movie_rename <filename(s)> [--dry-run]");
-        println!(
-            "  There needs to be a config file names movie_rename.conf in your $XDG_CONFIG_HOME."
-        );
-        println!("  It should consist of two lines. The first line should have your TMDb API key.");
-        println!("  The second line should have a pattern, that will be used for the rename.");
-        println!("  In the pattern, the variables need to be enclosed in {{}}, the supported variables are `title`, `year` and `director`.");
-        println!(
-            "  Default pattern is `{{title}} ({{year}}) - {{director}}`. Extension is always kept."
-        );
-        println!("Pass --help to get this again.");
-        exit(0);
-    }
+    // Process the passed arguments
+    let (filenames, settings) = process_args(args);
 
     // Try to read config file, or display error
     let mut config_file = env::var("XDG_CONFIG_HOME").unwrap_or("$HOME".to_string());
@@ -95,20 +79,8 @@ fn main() {
         language: "en",
     };
 
-    // Check if --dry-run is passed
-    let mut dry_run = false;
-    if filenames.contains(&"--dry-run".to_string()) {
-        println!("Doing a dry run.");
-        dry_run = true;
-    }
-
     // Iterate over filenames
     for filename in filenames {
-        // Skip if it's the --dry-run tag
-        if filename == "--dry-run".to_string() {
-            continue;
-        }
-
         // Process the filename for movie entries
         let (mut extension, movie_list) = process_movie(&filename, &tmdb, pattern);
 
@@ -142,7 +114,7 @@ fn main() {
         } else {
             println!("{} -> {}", filename, new_name);
             // Only do the rename of --dry-run isn't passed
-            if dry_run == false {
+            if settings["dry_run"] == false {
                 println!("Renaming...");
                 fs::rename(filename, new_name).expect("Unable to rename file.");
             }
@@ -198,4 +170,41 @@ fn display(movie: &MovieEntry) -> String {
     buffer.push_str(&format!("TMDb ID: {}\n", movie.id));
     buffer.push_str(&format!("Overview: {}\n", movie.overview));
     buffer
+}
+
+// Function to process the passed arguments
+fn process_args(mut args: Vec<String>) -> (Vec<String>, HashMap<&'static str, bool>) {
+    // Remove the entry corresponding to the running process
+    args.remove(0);
+    let mut filenames = Vec::new();
+    let mut settings = HashMap::from([("dry_run", false)]);
+    for arg in args {
+        match arg.as_str() {
+            "--help" => {
+                println!("  The expected syntax is:");
+                println!("  movie_rename <filename(s)> [--dry-run]");
+                println!(
+                "  There needs to be a config file names movie_rename.conf in your $XDG_CONFIG_HOME."
+                );
+                println!("  It should consist of two lines. The first line should have your TMDb API key.");
+                println!(
+                    "  The second line should have a pattern, that will be used for the rename."
+                );
+                println!("  In the pattern, the variables need to be enclosed in {{}}, the supported variables are `title`, `year` and `director`.");
+                println!(
+                "  Default pattern is `{{title}} ({{year}}) - {{director}}`. Extension is always kept."
+                );
+                println!("  Pass --help to get this again.");
+                exit(0);
+            }
+            "--dry_run" => {
+                println!("Doing a dry run...");
+                settings.entry("dry_run").and_modify(|x| *x = true);
+            }
+            _ => {
+                filenames.push(arg);
+            }
+        }
+    }
+    (filenames, settings)
 }
