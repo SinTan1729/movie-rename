@@ -56,7 +56,19 @@ fn main() {
         api_key: api_key,
         language: "en",
     };
+
+    let mut dry_run = false;
+
+    if filenames.contains(&"--dry-run".to_string()) {
+        println!("Doing a dry run.");
+        dry_run = true;
+    }
+
     for filename in filenames {
+        if filename == "--dry-run".to_string() {
+            continue;
+        }
+
         let metadata = Metadata::from(filename.as_str()).unwrap();
         let results = tmdb
             .search()
@@ -112,7 +124,10 @@ fn main() {
             println!("{} already has correct name.", filename);
         } else {
             println!("{} -> {}", filename, new_name);
-            fs::rename(filename, new_name).expect("Unable to rename file.");
+            if dry_run == false {
+                println!("Doing the actual rename.");
+                fs::rename(filename, new_name).expect("Unable to rename file.");
+            }
         }
     }
 }
