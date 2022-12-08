@@ -91,9 +91,20 @@ fn main() {
             .preview(display)
             .preview_label(filename.to_string());
         let choice = menu.show()[0];
+
+        let mut extension = metadata.extension().unwrap_or("").to_string();
+        if ["srt", "ssa"].contains(&extension.as_str()) {
+            let languages = Vec::from(["en", "hi", "bn", "de", "fr", "sp", "ja", "n/a"]);
+            let mut lang_menu = youchoose::Menu::new(languages.iter());
+            let lang_choice = lang_menu.show()[0];
+            if languages[lang_choice] != "none" {
+                extension = format!("{}.{}", languages[lang_choice], extension);
+            }
+        }
+
         let mut new_name_vec = vec![
             movie_list[choice].rename_format(pattern.to_string()),
-            metadata.extension().unwrap_or("").to_string(),
+            extension,
         ];
         new_name_vec.retain(|x| !x.is_empty());
         let new_name = new_name_vec.join(".");
