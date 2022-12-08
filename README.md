@@ -6,7 +6,7 @@ This is made mostly due to [mnamer](https://github.com/jkwill87/mnamer) not havi
 
 The expected syntax is:
 
-`movie_rename <filename(s)> [--dry-run]`
+`movie_rename <filename(s)> [--dry-run] [--help]`
 - There needs to be a config file names movie_rename.conf in your $XDG_CONFIG_HOME.
 - It should consist of two lines. The first line should have your TMDb API key.
 - The second line should have a pattern, that will be used for the rename.

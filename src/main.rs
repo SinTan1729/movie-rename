@@ -70,6 +70,7 @@ fn main() {
         println!(
             "  Default pattern is `{{title}} ({{year}}) - {{director}}`. Extension is always kept."
         );
+        println!("Pass --help to get this again.");
         exit(0);
     }
 
