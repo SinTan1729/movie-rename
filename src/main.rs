@@ -30,7 +30,9 @@ impl MovieEntry {
     // Generate desired filename from movie entry
     fn rename_format(&self, mut format: String) -> String {
         format = format.replace("{title}", self.title.as_str());
-        format = format.replace("{year}", self.year.as_str());
+        if self.year.as_str() != "n/a" {
+            format = format.replace("{year}", self.year.as_str());
+        }
         format = format.replace("{director}", self.director.as_str());
         format
     }
