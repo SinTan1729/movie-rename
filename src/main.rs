@@ -109,42 +109,8 @@ fn main() {
             continue;
         }
 
-        // Parse the filename for metadata
-        let metadata = Metadata::from(filename.as_str()).expect("Could not parse filename");
-
-        // Search using the TMDb API
-        let results = tmdb
-            .search()
-            .title(metadata.title())
-            .year(metadata.year().unwrap() as u64)
-            .execute()
-            .unwrap()
-            .results;
-
-        let mut movie_list: Vec<MovieEntry> = Vec::new();
-
-        // Create movie entry from the result
-        for result in results {
-            let mut movie_details = MovieEntry::from(result);
-            // Get director's name, if needed
-            if pattern.contains("{director}") {
-                let with_credits: Result<Movie, _> =
-                    tmdb.fetch().id(movie_details.id).append_credits().execute();
-                if let Ok(movie) = with_credits {
-                    match movie.credits {
-                        Some(cre) => {
-                            let mut directors = cre.crew;
-                            directors.retain(|x| x.job == "Director");
-                            for person in directors {
-                                movie_details.director = person.name;
-                            }
-                        }
-                        None => {}
-                    }
-                }
-            }
-            movie_list.push(movie_details);
-        }
+        // Process the filename for movie entries
+        let (mut extension, movie_list) = process_movie(&filename, &tmdb, pattern);
 
         // Choose from the possible entries
         let mut menu = youchoose::Menu::new(movie_list.iter())
@@ -153,7 +119,6 @@ fn main() {
         let choice = menu.show()[0];
 
         // Handle the case for subtitle files
-        let mut extension = metadata.extension().unwrap_or("").to_string();
         if ["srt", "ssa"].contains(&extension.as_str()) {
             let languages = Vec::from(["en", "hi", "bn", "de", "fr", "sp", "ja", "n/a"]);
             let mut lang_menu = youchoose::Menu::new(languages.iter());
@@ -170,6 +135,8 @@ fn main() {
         ];
         new_name_vec.retain(|x| !x.is_empty());
         let new_name = new_name_vec.join(".");
+
+        // Process the renaming
         if filename == new_name {
             println!("{} already has correct name.", filename);
         } else {
@@ -181,6 +148,44 @@ fn main() {
             }
         }
     }
+}
+
+// Function to process movie entries
+fn process_movie(filename: &String, tmdb: &TMDb, pattern: &str) -> (String, Vec<MovieEntry>) {
+    // Parse the filename for metadata
+    let metadata = Metadata::from(filename.as_str()).expect("Could not parse filename");
+    // Search using the TMDb API
+    let results = tmdb
+        .search()
+        .title(metadata.title())
+        .year(metadata.year().unwrap() as u64)
+        .execute()
+        .unwrap()
+        .results;
+    let mut movie_list: Vec<MovieEntry> = Vec::new();
+    // Create movie entry from the result
+    for result in results {
+        let mut movie_details = MovieEntry::from(result);
+        // Get director's name, if needed
+        if pattern.contains("{director}") {
+            let with_credits: Result<Movie, _> =
+                tmdb.fetch().id(movie_details.id).append_credits().execute();
+            if let Ok(movie) = with_credits {
+                match movie.credits {
+                    Some(cre) => {
+                        let mut directors = cre.crew;
+                        directors.retain(|x| x.job == "Director");
+                        for person in directors {
+                            movie_details.director = person.name;
+                        }
+                    }
+                    None => {}
+                }
+            }
+        }
+        movie_list.push(movie_details);
+    }
+    (metadata.extension().unwrap_or("").to_string(), movie_list)
 }
 
 // Display function for preview in menu
