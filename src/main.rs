@@ -1,5 +1,5 @@
 use load_file::{self, load_str};
-use std::{collections::HashMap, env, fmt, fs, process::exit};
+use std::{collections::HashMap, env, fmt, fs, path::Path, process::exit};
 use tmdb::{model::*, themoviedb::*};
 use torrent_name_parser::Metadata;
 use youchoose;
@@ -81,8 +81,20 @@ fn main() {
 
     // Iterate over filenames
     for filename in filenames {
+        // Check if the file exists on disk
+        if Path::new(filename.as_str()).exists() == false {
+            eprintln!("{} wasn't found on disk, skipping...", filename);
+            continue;
+        }
+
         // Process the filename for movie entries
         let (mut extension, movie_list) = process_movie(&filename, &tmdb, pattern);
+
+        // If nothing is found, skip
+        if movie_list.len() == 0 {
+            eprintln!("Could not find any entries matching {}", filename);
+            continue;
+        }
 
         // Choose from the possible entries
         let mut menu = youchoose::Menu::new(movie_list.iter())
@@ -127,13 +139,28 @@ fn process_movie(filename: &String, tmdb: &TMDb, pattern: &str) -> (String, Vec<
     // Parse the filename for metadata
     let metadata = Metadata::from(filename.as_str()).expect("Could not parse filename");
     // Search using the TMDb API
-    let results = tmdb
-        .search()
-        .title(metadata.title())
-        .year(metadata.year().unwrap() as u64)
-        .execute()
-        .unwrap()
-        .results;
+    let mut search = tmdb.search();
+    search.title(metadata.title());
+
+    // Check if year is present in filename
+    match metadata.year() {
+        Some(year) => {
+            search.year(year as u64);
+        }
+        _ => {
+            eprintln!(
+                "Year is currently needed for the search to work, please add year in the filename." // TODO Add support for missing year
+            );
+        }
+    }
+
+    let mut results = Vec::new();
+    if let Ok(search_results) = search.execute() {
+        results = search_results.results;
+    } else {
+        eprintln!("There was an error while searching {}", filename);
+    }
+
     let mut movie_list: Vec<MovieEntry> = Vec::new();
     // Create movie entry from the result
     for result in results {
