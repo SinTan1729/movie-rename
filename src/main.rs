@@ -81,10 +81,20 @@ fn main() {
 
     // Iterate over filenames
     for filename in filenames {
-        // Check if the file exists on disk
-        if Path::new(filename.as_str()).exists() == false {
-            eprintln!("{} wasn't found on disk, skipping...", filename);
-            continue;
+        // Check if the file/directory exists on disk
+        match settings["directory"] {
+            false => {
+                if Path::new(filename.as_str()).is_file() == false {
+                    eprintln!("{} wasn't found on disk, skipping...", filename);
+                    continue;
+                }
+            }
+            true => {
+                if Path::new(filename.as_str()).is_dir() == false {
+                    eprintln!("{} wasn't found on disk, skipping...", filename);
+                    continue;
+                }
+            }
         }
 
         // Process the filename for movie entries
@@ -143,11 +153,8 @@ fn process_movie(filename: &String, tmdb: &TMDb, pattern: &str) -> (String, Vec<
     search.title(metadata.title());
 
     // Check if year is present in filename
-    match metadata.year() {
-        Some(year) => {
-            search.year(year as u64);
-        }
-        _ => {}
+    if let Some(year) = metadata.year() {
+        search.year(year as u64);
     }
 
     let mut results = Vec::new();
@@ -166,15 +173,12 @@ fn process_movie(filename: &String, tmdb: &TMDb, pattern: &str) -> (String, Vec<
             let with_credits: Result<Movie, _> =
                 tmdb.fetch().id(movie_details.id).append_credits().execute();
             if let Ok(movie) = with_credits {
-                match movie.credits {
-                    Some(cre) => {
-                        let mut directors = cre.crew;
-                        directors.retain(|x| x.job == "Director");
-                        for person in directors {
-                            movie_details.director = person.name;
-                        }
+                if let Some(cre) = movie.credits {
+                    let mut directors = cre.crew;
+                    directors.retain(|x| x.job == "Director");
+                    for person in directors {
+                        movie_details.director = person.name;
                     }
-                    None => {}
                 }
             }
         }
@@ -200,7 +204,7 @@ fn process_args(mut args: Vec<String>) -> (Vec<String>, HashMap<&'static str, bo
     // Remove the entry corresponding to the running process
     args.remove(0);
     let mut filenames = Vec::new();
-    let mut settings = HashMap::from([("dry_run", false)]);
+    let mut settings = HashMap::from([("dry_run", false), ("directory", false)]);
     for arg in args {
         match arg.as_str() {
             "--help" => {
@@ -223,6 +227,10 @@ fn process_args(mut args: Vec<String>) -> (Vec<String>, HashMap<&'static str, bo
             "--dry-run" => {
                 println!("Doing a dry run...");
                 settings.entry("dry_run").and_modify(|x| *x = true);
+            }
+            "--directory" => {
+                println!("Running in directory mode...");
+                settings.entry("directory").and_modify(|x| *x = true);
             }
             _ => {
                 filenames.push(arg);
