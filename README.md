@@ -1,3 +1,4 @@
+![latest-release](https://img.shields.io/github/v/release/SinTan1729/movie_rename?label=latest%20release) ![commits-since-latest-release](https://img.shields.io/github/commits-since/SInTan1729/movie_rename/latest?label=commits%20since%20latest%20release)
 # movie_rename
 
 ### A simple tool to rename movies, written in Rust.
