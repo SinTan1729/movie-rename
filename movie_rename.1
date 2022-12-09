@@ -1,0 +1,37 @@
+.\" Manpage for movie_rename.
+.\" Contact sayantan[dot]santra689[at]gmail[dot]com to correct errors or typos.
+.TH man 1 "08 Dec 2022" "1.1.1" "movie_rename man page"
+.SH NAME
+movie_rename
+.SH SYNOPSIS
+movie_rename <filename(s)> [-n|--dry-run] [-d|--directory] [-h|--help] [-v|--version]
+.SH DESCRIPTION
+movie_rename is a simple tool to rename movies, written in Rust.
+.SH ARGUMENTS
+A list of filenames (or directory names, not both). -d or --directory must be passed to work with directories.
+.SH OPTIONS
+.TP
+-n, --dry-run
+Performs a dry run, without actually renaming anything.
+.TP
+-d. --directory
+Runs in directory mode. In this mode, it is assumed that the arguments are directory names, which contain exactly one movie and optionally subtitles.
+.TP
+-h, --help
+Print help information.
+.TP
+-v, --version
+Print version information.
+.SH CONFIG
+There needs to be a config file named movie_rename.conf in your $XDG_CONFIG_HOME.
+It should consist of two lines.
+.sp
+The first line should have your TMDb API key.
+.sp
+The second line should have a pattern, that will be used for the rename.
+.sp
+In the pattern, the variables need to be enclosed in {}, the supported variables are `title`, `year` and `director`.
+.sp
+Default pattern is `{title} ({year}) - {director}`. Extension is always kept.
+.SH AUTHOR
+Sayantan Santra sayantan[dot]santra689[at]gmail[dot]com

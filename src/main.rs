@@ -4,6 +4,7 @@ use tmdb::{model::*, themoviedb::*};
 use torrent_name_parser::Metadata;
 use youchoose;
 
+const VERSION: &str = "1.1.1";
 // Struct for movie entries
 struct MovieEntry {
     title: String,
@@ -259,9 +260,11 @@ fn process_args(mut args: Vec<String>) -> (Vec<String>, HashMap<&'static str, bo
     let mut settings = HashMap::from([("dry_run", false), ("directory", false)]);
     for arg in args {
         match arg.as_str() {
-            "--help" => {
+            "--help" | "-h" => {
                 println!("  The expected syntax is:");
-                println!("  movie_rename <filename(s)> [--dry-run] [--directory]");
+                println!(
+                    "  movie_rename <filename(s)> [-n|--dry-run] [-d|--directory] [-v|--version]"
+                );
                 println!(
                 "  There needs to be a config file names movie_rename.conf in your $XDG_CONFIG_HOME."
                 );
@@ -277,16 +280,24 @@ fn process_args(mut args: Vec<String>) -> (Vec<String>, HashMap<&'static str, bo
                 println!("  Pass --help to get this again.");
                 exit(0);
             }
-            "--dry-run" => {
+            "--dry-run" | "-n" => {
                 println!("Doing a dry run...");
                 settings.entry("dry_run").and_modify(|x| *x = true);
             }
-            "--directory" => {
+            "--directory" | "-d" => {
                 println!("Running in directory mode...");
                 settings.entry("directory").and_modify(|x| *x = true);
             }
-            _ => {
-                entries.push(arg);
+            "--version" | "-v" => {
+                println!("{}", VERSION);
+                exit(0);
+            }
+            other => {
+                if other.contains("-") {
+                    eprintln!("Unknown argument passed: {}", other);
+                } else {
+                    entries.push(arg);
+                }
             }
         }
     }
