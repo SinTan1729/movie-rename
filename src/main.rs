@@ -4,7 +4,9 @@ use tmdb::{model::*, themoviedb::*};
 use torrent_name_parser::Metadata;
 use youchoose;
 
-const VERSION: &str = "1.1.2";
+// Get the version from Cargo.toml
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 // Struct for movie entries
 struct MovieEntry {
     title: String,
