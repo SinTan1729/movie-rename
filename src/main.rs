@@ -65,6 +65,7 @@ fn main() {
     let mut config_file = env::var("XDG_CONFIG_HOME").unwrap_or("$HOME".to_string());
     if config_file == String::from("$HOME") {
         config_file = env::var("$HOME").unwrap();
+        config_file.push_str("/.config");
     }
     config_file.push_str("/movie_rename.conf");
     let mut config = load_str!(config_file.as_str()).lines();
