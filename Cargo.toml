@@ -8,5 +8,5 @@ edition = "2021"
 [dependencies]
 torrent-name-parser = "0.11.0"
 tmdb = "3.0.0"
-youchoose = "0.1.1"
+inquire = "0.5.2"
 load_file = "1.0.1"

@@ -1,7 +1,10 @@
+use inquire::{
+    ui::{Color, IndexPrefix, RenderConfig, Styled},
+    Select,
+};
 use std::{collections::HashMap, fs, process::exit};
 use tmdb::{model::*, themoviedb::*};
 use torrent_name_parser::Metadata;
-use youchoose;
 
 use crate::structs::{Language, MovieEntry};
 
@@ -15,6 +18,9 @@ pub fn process_file(
     pattern: &str,
     dry_run: bool,
 ) -> (String, bool) {
+    // Set RenderConfig for the menu items
+    inquire::set_global_render_config(get_render_config());
+
     // Get the basename
     let mut file_base = String::from(filename);
     let mut parent = String::from("");
@@ -72,26 +78,29 @@ pub fn process_file(
     }
 
     // Choose from the possible entries
-    let mut menu = youchoose::Menu::new(movie_list.iter())
-        .preview(display)
-        .preview_label(file_base.to_string());
-    let choice = menu.show()[0];
+    let choice = Select::new(
+        format!("Possible choices for {}", file_base).as_str(),
+        movie_list,
+    )
+    .prompt()
+    .expect("Invalid choice!");
 
     let mut extension = metadata.extension().unwrap_or("").to_string();
     // Handle the case for subtitle files
     let mut is_subtitle = false;
     if ["srt", "ssa"].contains(&extension.as_str()) {
-        let languages = Language::generate_list();
-        let mut lang_menu = youchoose::Menu::new(languages.iter());
-        let lang_choice = lang_menu.show()[0];
-        if languages[lang_choice].short != "none".to_string() {
-            extension = format!("{}.{}", languages[lang_choice].short, extension);
+        let lang_list = Language::generate_list();
+        let lang_choice = Select::new("Choose the language for the subtitle file:", lang_list)
+            .prompt()
+            .expect("Invalid choice!");
+        if lang_choice.short != "none".to_string() {
+            extension = format!("{}.{}", lang_choice.short, extension);
         }
         is_subtitle = true;
     }
 
     // Create the new name
-    let mut new_name_base = movie_list[choice].rename_format(pattern.to_string());
+    let mut new_name_base = choice.rename_format(pattern.to_string());
     if extension != "" {
         new_name_base = format!("{}.{}", new_name_base, extension);
     }
@@ -111,18 +120,6 @@ pub fn process_file(
         }
     }
     (new_name_base, is_subtitle)
-}
-
-// Display function for preview in menu
-fn display(movie: &MovieEntry) -> String {
-    let mut buffer = String::new();
-    buffer.push_str(&format!("Title: {}\n", movie.title));
-    buffer.push_str(&format!("Release year: {}\n", movie.year));
-    buffer.push_str(&format!("Language: {}\n", movie.language));
-    buffer.push_str(&format!("Director: {}\n", movie.director));
-    buffer.push_str(&format!("TMDb ID: {}\n", movie.id));
-    buffer.push_str(&format!("Overview: {}\n", movie.overview));
-    buffer
 }
 
 // Function to process the passed arguments
@@ -175,4 +172,15 @@ pub fn process_args(mut args: Vec<String>) -> (Vec<String>, HashMap<&'static str
         }
     }
     (entries, settings)
+}
+// RenderConfig for the menu items
+fn get_render_config() -> RenderConfig {
+    let mut render_config = RenderConfig::default();
+    render_config.option_index_prefix = IndexPrefix::Simple;
+
+    render_config.error_message = render_config
+        .error_message
+        .with_prefix(Styled::new("❌").with_fg(Color::LightRed));
+
+    render_config
 }
