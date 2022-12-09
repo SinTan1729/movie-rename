@@ -193,7 +193,7 @@ fn display(movie: &MovieEntry) -> String {
     buffer.push_str(&format!("Title: {}\n", movie.title));
     buffer.push_str(&format!("Release year: {}\n", movie.year));
     buffer.push_str(&format!("Language: {}\n", movie.language));
-    buffer.push_str(&format!("Director: {}\n", movie.title));
+    buffer.push_str(&format!("Director: {}\n", movie.director));
     buffer.push_str(&format!("TMDb ID: {}\n", movie.id));
     buffer.push_str(&format!("Overview: {}\n", movie.overview));
     buffer
