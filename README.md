@@ -1,4 +1,4 @@
-# movie-rename
+# movie_rename
 
 ### A simple tool to rename movies, written in Rust.
 
