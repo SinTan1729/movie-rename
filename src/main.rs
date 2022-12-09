@@ -98,54 +98,12 @@ fn main() {
         }
 
         // Process the filename for movie entries
-        let (mut extension, movie_list) = process_movie(&filename, &tmdb, pattern);
-
-        // If nothing is found, skip
-        if movie_list.len() == 0 {
-            eprintln!("Could not find any entries matching {}", filename);
-            continue;
-        }
-
-        // Choose from the possible entries
-        let mut menu = youchoose::Menu::new(movie_list.iter())
-            .preview(display)
-            .preview_label(filename.to_string());
-        let choice = menu.show()[0];
-
-        // Handle the case for subtitle files
-        if ["srt", "ssa"].contains(&extension.as_str()) {
-            let languages = Vec::from(["en", "hi", "bn", "de", "fr", "sp", "ja", "n/a"]);
-            let mut lang_menu = youchoose::Menu::new(languages.iter());
-            let lang_choice = lang_menu.show()[0];
-            if languages[lang_choice] != "none" {
-                extension = format!("{}.{}", languages[lang_choice], extension);
-            }
-        }
-
-        // Create the new name
-        let mut new_name_vec = vec![
-            movie_list[choice].rename_format(pattern.to_string()),
-            extension,
-        ];
-        new_name_vec.retain(|x| !x.is_empty());
-        let new_name = new_name_vec.join(".");
-
-        // Process the renaming
-        if filename == new_name {
-            println!("{} already has correct name.", filename);
-        } else {
-            println!("{} -> {}", filename, new_name);
-            // Only do the rename of --dry-run isn't passed
-            if settings["dry_run"] == false {
-                println!("Renaming...");
-                fs::rename(filename, new_name).expect("Unable to rename file.");
-            }
-        }
+        process_file(&filename, &tmdb, pattern, settings["dry_run"]);
     }
 }
 
 // Function to process movie entries
-fn process_movie(filename: &String, tmdb: &TMDb, pattern: &str) -> (String, Vec<MovieEntry>) {
+fn process_file(filename: &String, tmdb: &TMDb, pattern: &str, dry_run: bool) {
     // Parse the filename for metadata
     let metadata = Metadata::from(filename.as_str()).expect("Could not parse filename");
     // Search using the TMDb API
@@ -184,7 +142,49 @@ fn process_movie(filename: &String, tmdb: &TMDb, pattern: &str) -> (String, Vec<
         }
         movie_list.push(movie_details);
     }
-    (metadata.extension().unwrap_or("").to_string(), movie_list)
+
+    // If nothing is found, skip
+    if movie_list.len() == 0 {
+        eprintln!("Could not find any entries matching {}", filename);
+        return;
+    }
+
+    // Choose from the possible entries
+    let mut menu = youchoose::Menu::new(movie_list.iter())
+        .preview(display)
+        .preview_label(filename.to_string());
+    let choice = menu.show()[0];
+
+    let mut extension = metadata.extension().unwrap_or("").to_string();
+    // Handle the case for subtitle files
+    if ["srt", "ssa"].contains(&extension.as_str()) {
+        let languages = Vec::from(["en", "hi", "bn", "de", "fr", "sp", "ja", "n/a"]);
+        let mut lang_menu = youchoose::Menu::new(languages.iter());
+        let lang_choice = lang_menu.show()[0];
+        if languages[lang_choice] != "none" {
+            extension = format!("{}.{}", languages[lang_choice], extension);
+        }
+    }
+
+    // Create the new name
+    let mut new_name_vec = vec![
+        movie_list[choice].rename_format(pattern.to_string()),
+        extension,
+    ];
+    new_name_vec.retain(|x| !x.is_empty());
+    let new_name = new_name_vec.join(".");
+
+    // Process the renaming
+    if *filename == new_name {
+        println!("{} already has correct name.", filename);
+    } else {
+        println!("{} -> {}", filename, new_name);
+        // Only do the rename of --dry-run isn't passed
+        if dry_run == false {
+            println!("Renaming...");
+            fs::rename(filename, new_name).expect("Unable to rename file.");
+        }
+    }
 }
 
 // Display function for preview in menu
