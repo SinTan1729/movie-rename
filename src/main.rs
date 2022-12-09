@@ -4,7 +4,7 @@ use tmdb::{model::*, themoviedb::*};
 use torrent_name_parser::Metadata;
 use youchoose;
 
-const VERSION: &str = "1.1.1";
+const VERSION: &str = "1.1.2";
 // Struct for movie entries
 struct MovieEntry {
     title: String,
@@ -293,7 +293,7 @@ fn process_args(mut args: Vec<String>) -> (Vec<String>, HashMap<&'static str, bo
                 exit(0);
             }
             other => {
-                if other.contains("-") {
+                if other.starts_with("-") {
                     eprintln!("Unknown argument passed: {}", other);
                 } else {
                     entries.push(arg);
