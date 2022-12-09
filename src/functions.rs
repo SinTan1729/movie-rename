@@ -138,10 +138,10 @@ pub fn process_args(mut args: Vec<String>) -> (Vec<String>, HashMap<&'static str
             "--help" | "-h" => {
                 println!("  The expected syntax is:");
                 println!(
-                    "  movie_rename <filename(s)> [-n|--dry-run] [-d|--directory] [-v|--version]"
+                    "  movie-rename <filename(s)> [-n|--dry-run] [-d|--directory] [-v|--version]"
                 );
                 println!(
-                "  There needs to be a config file names movie_rename.conf in your $XDG_CONFIG_HOME."
+                "  There needs to be a config file names movie-rename.conf in your $XDG_CONFIG_HOME."
                 );
                 println!("  It should consist of two lines. The first line should have your TMDb API key.");
                 println!(
@@ -164,7 +164,7 @@ pub fn process_args(mut args: Vec<String>) -> (Vec<String>, HashMap<&'static str
                 settings.entry("directory").and_modify(|x| *x = true);
             }
             "--version" | "-v" => {
-                println!("movie_rename {}", VERSION);
+                println!("movie-rename {}", VERSION);
                 exit(0);
             }
             other => {

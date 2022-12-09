@@ -20,7 +20,7 @@ fn main() {
         config_file = env::var("$HOME").unwrap();
         config_file.push_str("/.config");
     }
-    config_file.push_str("/movie_rename.conf");
+    config_file.push_str("/movie-rename.conf");
     let mut config = load_str!(config_file.as_str()).lines();
     let api_key = config.next().unwrap_or("");
     let pattern = config.next().unwrap_or("{title} ({year}) - {director}");
