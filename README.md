@@ -6,7 +6,7 @@
 This is made mostly due to [mnamer](https://github.com/jkwill87/mnamer) not having support for director's name, and partly because I wanted to try writing something useful in Rust.
 
 ## Installation
-Install from [AUR](https://aur.archlinux.org/packages/movie-rename), my personal [lure-repo](https://github.com/SinTan1729/lure-repo) or download the binary from the releases.
+Install from [AUR](https://aur.archlinux.org/packages/movie-rename-bin), my personal [lure-repo](https://github.com/SinTan1729/lure-repo) or download the binary from the releases.
 
 ## Notes
 
