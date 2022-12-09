@@ -8,7 +8,6 @@ pub struct MovieEntry {
     pub director: String,
     pub year: String,
     pub language: String,
-    pub overview: String,
 }
 
 impl MovieEntry {
@@ -19,8 +18,7 @@ impl MovieEntry {
             id: movie.id,
             director: String::from("N/A"),
             year: String::from(movie.release_date.split('-').next().unwrap_or("N/A")),
-            language: movie.original_language,
-            overview: movie.overview.unwrap_or(String::from("N/A")),
+            language: get_long_lang(movie.original_language.as_str()),
         }
     }
 
@@ -44,7 +42,14 @@ impl MovieEntry {
 // Implement display trait for movie entries
 impl fmt::Display for MovieEntry {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} ({})", self.title, self.year)
+        let mut buffer = String::new();
+        buffer.push_str(&format!("{} ", self.title));
+        buffer.push_str(&format!("({}), ", self.year));
+        buffer.push_str(&format!("Language: {}, ", self.language));
+        buffer.push_str(&format!("Directed by: {}, ", self.director));
+        buffer.push_str(&format!("TMDb ID: {}", self.id));
+        // buffer.push_str(&format!("Synopsis: {}", self.overview));
+        write!(f, "{}", buffer)
     }
 }
 
@@ -54,25 +59,15 @@ pub struct Language {
 }
 
 impl Language {
-    // Create Language entries from &str pairs
-    fn from(short: &str, long: &str) -> Language {
-        Language {
-            short: short.to_string(),
-            long: long.to_string(),
-        }
-    }
-
     // Generate a vector of Language entries of all supported languages
     pub fn generate_list() -> Vec<Language> {
         let mut list = Vec::new();
-        list.push(Language::from("en", "English"));
-        list.push(Language::from("hi", "Hindi"));
-        list.push(Language::from("bn", "Bengali"));
-        list.push(Language::from("fr", "French"));
-        list.push(Language::from("ja", "Japanese"));
-        list.push(Language::from("de", "German"));
-        list.push(Language::from("sp", "Spanish"));
-        list.push(Language::from("none", "None"));
+        for lang in ["en", "hi", "bn", "fr", "ja", "de", "sp", "none"] {
+            list.push(Language {
+                short: lang.to_string(),
+                long: get_long_lang(lang),
+            });
+        }
         list
     }
 }
@@ -82,4 +77,20 @@ impl fmt::Display for Language {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.long)
     }
+}
+
+// Get long name of a language
+fn get_long_lang(short: &str) -> String {
+    let long = match short {
+        "en" => "English",
+        "hi" => "Hindi",
+        "bn" => "Bengali",
+        "fr" => "French",
+        "ja" => "Japanese",
+        "de" => "German",
+        "sp" => "Spanish",
+        "none" => "None",
+        other => other,
+    };
+    long.to_string()
 }

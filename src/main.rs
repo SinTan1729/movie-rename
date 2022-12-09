@@ -76,10 +76,11 @@ fn main() {
                         continue;
                     }
                     if movie_count == 1 {
-                        if entry == movie_name {
-                            println!("[directory] {} already has correct name.", entry);
+                        let entry_clean = entry.trim_end_matches("/");
+                        if entry_clean == movie_name {
+                            println!("[directory] '{}' already has correct name.", entry_clean);
                         } else {
-                            println!("[directory] {} -> {}", entry, movie_name);
+                            println!("[directory] '{}' -> '{}'", entry_clean, movie_name);
                             if settings["dry_run"] == false {
                                 fs::rename(entry, movie_name).expect("Unable to rename directory!");
                             }

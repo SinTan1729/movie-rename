@@ -79,7 +79,7 @@ pub fn process_file(
 
     // Choose from the possible entries
     let choice = Select::new(
-        format!("Possible choices for {}", file_base).as_str(),
+        format!("Possible choices for {}:", file_base).as_str(),
         movie_list,
     )
     .prompt()
@@ -112,9 +112,9 @@ pub fn process_file(
 
     // Process the renaming
     if *filename == new_name {
-        println!("[file] {} already has correct name.", filename);
+        println!("[file] '{}' already has correct name.", file_base);
     } else {
-        println!("[file] {} -> {}", file_base, new_name_with_ext);
+        println!("[file] '{}' -> '{}'", file_base, new_name_with_ext);
         // Only do the rename of --dry-run isn't passed
         if dry_run == false {
             fs::rename(filename, new_name.as_str()).expect("Unable to rename file!");
