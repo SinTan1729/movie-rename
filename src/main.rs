@@ -147,11 +147,7 @@ fn process_movie(filename: &String, tmdb: &TMDb, pattern: &str) -> (String, Vec<
         Some(year) => {
             search.year(year as u64);
         }
-        _ => {
-            eprintln!(
-                "Year is currently needed for the search to work, please add year in the filename." // TODO Add support for missing year
-            );
-        }
+        _ => {}
     }
 
     let mut results = Vec::new();
@@ -224,7 +220,7 @@ fn process_args(mut args: Vec<String>) -> (Vec<String>, HashMap<&'static str, bo
                 println!("  Pass --help to get this again.");
                 exit(0);
             }
-            "--dry_run" => {
+            "--dry-run" => {
                 println!("Doing a dry run...");
                 settings.entry("dry_run").and_modify(|x| *x = true);
             }
