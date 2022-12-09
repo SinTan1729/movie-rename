@@ -27,7 +27,7 @@ fn main() {
 
     if api_key == "" {
         eprintln!("Error reading the config file. Pass --help to see help.");
-        exit(1);
+        exit(2);
     }
 
     // Create TMDb object for API calls

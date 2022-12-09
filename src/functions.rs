@@ -165,6 +165,7 @@ pub fn process_args(mut args: Vec<String>) -> (Vec<String>, HashMap<&'static str
             other => {
                 if other.starts_with("-") {
                     eprintln!("Unknown argument passed: {}", other);
+                    exit(1);
                 } else {
                     entries.push(arg);
                 }
