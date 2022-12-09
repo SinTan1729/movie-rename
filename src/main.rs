@@ -289,7 +289,7 @@ fn process_args(mut args: Vec<String>) -> (Vec<String>, HashMap<&'static str, bo
                 settings.entry("directory").and_modify(|x| *x = true);
             }
             "--version" | "-v" => {
-                println!("{}", VERSION);
+                println!("movie_rename {}", VERSION);
                 exit(0);
             }
             other => {
