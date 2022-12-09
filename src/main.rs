@@ -261,7 +261,7 @@ fn process_args(mut args: Vec<String>) -> (Vec<String>, HashMap<&'static str, bo
         match arg.as_str() {
             "--help" => {
                 println!("  The expected syntax is:");
-                println!("  movie_rename <filename(s)> [--dry-run]");
+                println!("  movie_rename <filename(s)> [--dry-run] [--directory]");
                 println!(
                 "  There needs to be a config file names movie_rename.conf in your $XDG_CONFIG_HOME."
                 );
@@ -273,6 +273,7 @@ fn process_args(mut args: Vec<String>) -> (Vec<String>, HashMap<&'static str, bo
                 println!(
                 "  Default pattern is `{{title}} ({{year}}) - {{director}}`. Extension is always kept."
                 );
+                println!("Passing --directory assumes that the arguments are directory names, which contain exactly one movie and optionally subtitles.");
                 println!("  Pass --help to get this again.");
                 exit(0);
             }
