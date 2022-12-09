@@ -56,7 +56,7 @@ fn main() {
     let args: Vec<String> = env::args().collect();
 
     // Process the passed arguments
-    let (filenames, settings) = process_args(args);
+    let (entries, settings) = process_args(args);
 
     // Try to read config file, or display error
     let mut config_file = env::var("XDG_CONFIG_HOME").unwrap_or("$HOME".to_string());
@@ -79,33 +79,81 @@ fn main() {
         language: "en",
     };
 
-    // Iterate over filenames
-    for filename in filenames {
+    // Iterate over entries
+    for entry in entries {
         // Check if the file/directory exists on disk
         match settings["directory"] {
+            // Normal file
             false => {
-                if Path::new(filename.as_str()).is_file() == false {
-                    eprintln!("{} wasn't found on disk, skipping...", filename);
+                if Path::new(entry.as_str()).is_file() == true {
+                    // Process the filename for movie entries
+                    process_file(&entry, &tmdb, pattern, settings["dry_run"]);
+                } else {
+                    eprintln!("The file {} wasn't found on disk, skipping...", entry);
                     continue;
                 }
             }
+            // Directory
             true => {
-                if Path::new(filename.as_str()).is_dir() == false {
-                    eprintln!("{} wasn't found on disk, skipping...", filename);
+                if Path::new(entry.as_str()).is_dir() == true {
+                    println!("Processing files inside the directory {}...", entry);
+                    let mut movie_count = 0;
+                    let mut movie_name = String::new();
+                    if let Ok(files_in_dir) = fs::read_dir(entry.as_str()) {
+                        for file in files_in_dir {
+                            if file.is_ok() {
+                                let (movie_name_temp, is_subtitle) = process_file(
+                                    &format!("{}", file.unwrap().path().display()),
+                                    &tmdb,
+                                    pattern,
+                                    settings["dry_run"],
+                                );
+                                if is_subtitle == false {
+                                    movie_count += 1;
+                                    movie_name = movie_name_temp;
+                                }
+                            }
+                        }
+                    } else {
+                        eprintln!("There was an error accessing the directory {}!", entry);
+                        continue;
+                    }
+                    if movie_count == 1 {
+                        if entry == movie_name {
+                            println!("[directory] {} already has correct name.", entry);
+                        } else {
+                            println!("[directory] {} -> {}", entry, movie_name);
+                            if settings["dry_run"] == false {
+                                fs::rename(entry, movie_name).expect("Unable to rename directory!");
+                            }
+                        }
+                    } else {
+                        eprintln!("Could not determine how to rename the directory {}!", entry);
+                    }
+                } else {
+                    eprintln!("The directory {} wasn't found on disk, skipping...", entry);
                     continue;
                 }
             }
         }
-
-        // Process the filename for movie entries
-        process_file(&filename, &tmdb, pattern, settings["dry_run"]);
     }
 }
 
 // Function to process movie entries
-fn process_file(filename: &String, tmdb: &TMDb, pattern: &str, dry_run: bool) {
+fn process_file(filename: &String, tmdb: &TMDb, pattern: &str, dry_run: bool) -> (String, bool) {
+    // Get the basename
+    let mut file_base = String::from(filename);
+    let mut parent = String::from("");
+    match filename.rsplit_once("/") {
+        Some(parts) => {
+            parent = parts.0.to_string();
+            file_base = parts.1.to_string();
+        }
+        None => {}
+    }
+
     // Parse the filename for metadata
-    let metadata = Metadata::from(filename.as_str()).expect("Could not parse filename");
+    let metadata = Metadata::from(file_base.as_str()).expect("Could not parse filename!");
     // Search using the TMDb API
     let mut search = tmdb.search();
     search.title(metadata.title());
@@ -119,7 +167,7 @@ fn process_file(filename: &String, tmdb: &TMDb, pattern: &str, dry_run: bool) {
     if let Ok(search_results) = search.execute() {
         results = search_results.results;
     } else {
-        eprintln!("There was an error while searching {}", filename);
+        eprintln!("There was an error while searching {}!", filename);
     }
 
     let mut movie_list: Vec<MovieEntry> = Vec::new();
@@ -145,18 +193,19 @@ fn process_file(filename: &String, tmdb: &TMDb, pattern: &str, dry_run: bool) {
 
     // If nothing is found, skip
     if movie_list.len() == 0 {
-        eprintln!("Could not find any entries matching {}", filename);
-        return;
+        eprintln!("Could not find any entries matching {}!", filename);
+        return ("".to_string(), true);
     }
 
     // Choose from the possible entries
     let mut menu = youchoose::Menu::new(movie_list.iter())
         .preview(display)
-        .preview_label(filename.to_string());
+        .preview_label(file_base.to_string());
     let choice = menu.show()[0];
 
     let mut extension = metadata.extension().unwrap_or("").to_string();
     // Handle the case for subtitle files
+    let mut is_subtitle = false;
     if ["srt", "ssa"].contains(&extension.as_str()) {
         let languages = Vec::from(["en", "hi", "bn", "de", "fr", "sp", "ja", "n/a"]);
         let mut lang_menu = youchoose::Menu::new(languages.iter());
@@ -164,27 +213,30 @@ fn process_file(filename: &String, tmdb: &TMDb, pattern: &str, dry_run: bool) {
         if languages[lang_choice] != "none" {
             extension = format!("{}.{}", languages[lang_choice], extension);
         }
+        is_subtitle = true;
     }
 
     // Create the new name
-    let mut new_name_vec = vec![
-        movie_list[choice].rename_format(pattern.to_string()),
-        extension,
-    ];
-    new_name_vec.retain(|x| !x.is_empty());
-    let new_name = new_name_vec.join(".");
+    let new_name_base = movie_list[choice].rename_format(pattern.to_string());
+    let mut new_name = String::from(new_name_base.clone());
+    if extension != "" {
+        new_name = format!("{}.{}", new_name, extension);
+    }
+    if parent != "".to_string() {
+        new_name = format!("{}/{}", parent, new_name);
+    }
 
     // Process the renaming
     if *filename == new_name {
-        println!("{} already has correct name.", filename);
+        println!("[file] {} already has correct name.", filename);
     } else {
-        println!("{} -> {}", filename, new_name);
+        println!("[file] {} -> {}", file_base, new_name);
         // Only do the rename of --dry-run isn't passed
         if dry_run == false {
-            println!("Renaming...");
-            fs::rename(filename, new_name).expect("Unable to rename file.");
+            fs::rename(filename, new_name.as_str()).expect("Unable to rename file!");
         }
     }
+    (new_name_base, is_subtitle)
 }
 
 // Display function for preview in menu
@@ -203,7 +255,7 @@ fn display(movie: &MovieEntry) -> String {
 fn process_args(mut args: Vec<String>) -> (Vec<String>, HashMap<&'static str, bool>) {
     // Remove the entry corresponding to the running process
     args.remove(0);
-    let mut filenames = Vec::new();
+    let mut entries = Vec::new();
     let mut settings = HashMap::from([("dry_run", false), ("directory", false)]);
     for arg in args {
         match arg.as_str() {
@@ -233,9 +285,9 @@ fn process_args(mut args: Vec<String>) -> (Vec<String>, HashMap<&'static str, bo
                 settings.entry("directory").and_modify(|x| *x = true);
             }
             _ => {
-                filenames.push(arg);
+                entries.push(arg);
             }
         }
     }
-    (filenames, settings)
+    (entries, settings)
 }
