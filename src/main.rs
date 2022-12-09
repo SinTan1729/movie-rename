@@ -82,7 +82,12 @@ fn main() {
                         } else {
                             println!("[directory] '{}' -> '{}'", entry_clean, movie_name);
                             if settings["dry_run"] == false {
-                                fs::rename(entry, movie_name).expect("Unable to rename directory!");
+                                if Path::new(movie_name.as_str()).is_dir() == false {
+                                    fs::rename(entry, movie_name)
+                                        .expect("Unable to rename directory!");
+                                } else {
+                                    eprintln!("Destination directory already exists, skipping...");
+                                }
                             }
                         }
                     } else {

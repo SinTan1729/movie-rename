@@ -2,7 +2,7 @@ use inquire::{
     ui::{Color, IndexPrefix, RenderConfig, Styled},
     Select,
 };
-use std::{collections::HashMap, fs, process::exit};
+use std::{collections::HashMap, fs, path::Path, process::exit};
 use tmdb::{model::*, themoviedb::*};
 use torrent_name_parser::Metadata;
 
@@ -117,7 +117,11 @@ pub fn process_file(
         println!("[file] '{}' -> '{}'", file_base, new_name_with_ext);
         // Only do the rename of --dry-run isn't passed
         if dry_run == false {
-            fs::rename(filename, new_name.as_str()).expect("Unable to rename file!");
+            if Path::new(new_name.as_str()).is_file() == false {
+                fs::rename(filename, new_name.as_str()).expect("Unable to rename file!");
+            } else {
+                eprintln!("Destination file already exists, skipping...");
+            }
         }
     }
     (new_name_base, is_subtitle)
