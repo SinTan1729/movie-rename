@@ -100,11 +100,12 @@ pub fn process_file(
     }
 
     // Create the new name
-    let mut new_name_base = choice.rename_format(pattern.to_string());
+    let new_name_base = choice.rename_format(pattern.to_string());
+    let mut new_name_with_ext = new_name_base.clone();
     if extension != "" {
-        new_name_base = format!("{}.{}", new_name_base, extension);
+        new_name_with_ext = format!("{}.{}", new_name_with_ext, extension);
     }
-    let mut new_name = String::from(new_name_base.clone());
+    let mut new_name = String::from(new_name_with_ext.clone());
     if parent != "".to_string() {
         new_name = format!("{}/{}", parent, new_name);
     }
@@ -113,7 +114,7 @@ pub fn process_file(
     if *filename == new_name {
         println!("[file] {} already has correct name.", filename);
     } else {
-        println!("[file] {} -> {}", file_base, new_name_base);
+        println!("[file] {} -> {}", file_base, new_name_with_ext);
         // Only do the rename of --dry-run isn't passed
         if dry_run == false {
             fs::rename(filename, new_name.as_str()).expect("Unable to rename file!");
