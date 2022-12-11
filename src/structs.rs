@@ -45,7 +45,10 @@ impl fmt::Display for MovieEntry {
         let mut buffer = String::new();
         buffer.push_str(&format!("{} ", self.title));
         buffer.push_str(&format!("({}), ", self.year));
-        buffer.push_str(&format!("Language: {}, ", self.language));
+        buffer.push_str(&format!(
+            "Language: {}, ",
+            get_long_lang(self.language.as_str())
+        ));
         buffer.push_str(&format!("Directed by: {}, ", self.director));
         buffer.push_str(&format!("TMDb ID: {}", self.id));
         // buffer.push_str(&format!("Synopsis: {}", self.overview));
