@@ -141,7 +141,7 @@ pub fn process_args(mut args: Vec<String>) -> (Vec<String>, HashMap<&'static str
                     "  movie-rename <filename(s)> [-n|--dry-run] [-d|--directory] [-v|--version]"
                 );
                 println!(
-                "  There needs to be a config file names movie-rename.conf in your $XDG_CONFIG_HOME."
+                "  There needs to be a config file named config in the $XDG_CONFIG_HOME/movie-rename/ directory."
                 );
                 println!("  It should consist of two lines. The first line should have your TMDb API key.");
                 println!(
@@ -151,8 +151,15 @@ pub fn process_args(mut args: Vec<String>) -> (Vec<String>, HashMap<&'static str
                 println!(
                 "  Default pattern is `{{title}} ({{year}}) - {{director}}`. Extension is always kept."
                 );
-                println!("Passing --directory assumes that the arguments are directory names, which contain exactly one movie and optionally subtitles.");
+                println!("  Passing --directory or -d assumes that the arguments are directory names, which contain exactly one movie and optionally subtitles.");
+                println!("  Passing --dry-run or -n does a dry tun and only prints out the new names, without actually doing anything.");
+                println!("  Passing -nd or -dn does a dry run in directory mode.");
+                println!("  Passing --version or -v shows version and exits.");
                 println!("  Pass --help to get this again.");
+                exit(0);
+            }
+            "--version" | "-v" => {
+                println!("movie-rename {}", VERSION);
                 exit(0);
             }
             "--dry-run" | "-n" => {
@@ -163,9 +170,10 @@ pub fn process_args(mut args: Vec<String>) -> (Vec<String>, HashMap<&'static str
                 println!("Running in directory mode...");
                 settings.entry("directory").and_modify(|x| *x = true);
             }
-            "--version" | "-v" => {
-                println!("movie-rename {}", VERSION);
-                exit(0);
+            "-nd" | "-dn" => {
+                println!("Doing a dry run in directory mode...");
+                settings.entry("dry_run").and_modify(|x| *x = true);
+                settings.entry("directory").and_modify(|x| *x = true);
             }
             other => {
                 if other.starts_with("-") {

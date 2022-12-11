@@ -17,13 +17,16 @@ Performs a dry run, without actually renaming anything.
 -d, --directory
 Runs in directory mode. In this mode, it is assumed that the arguments are directory names, which contain exactly one movie and optionally subtitles.
 .TP
+-dn, -nd
+Performs a dry run in directory mode.
+.TP
 -h, --help
 Print help information.
 .TP
 -v, --version
 Print version information.
 .SH CONFIG
-There needs to be a config file named movie-rename.conf in your $XDG_CONFIG_HOME.
+There needs to be a config file named config in the $XDG_CONFIG_HOME/movie-rename/ directory.
 It should consist of two lines.
 .sp
 The first line should have your TMDb API key.

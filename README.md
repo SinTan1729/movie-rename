@@ -13,11 +13,15 @@ Install from [AUR](https://aur.archlinux.org/packages/movie-rename), my personal
 - The expected syntax is:
 
     `movie-rename <filename(s)> [-n|--dry-run] [-d|--directory] [-h|--help] [-v|--version]`
-- There needs to be a config file named movie-rename.conf in your $XDG_CONFIG_HOME.
+- There needs to be a config file named `config` in the `$XDG_CONFIG_HOME/movie-rename/` directory.
 - It should consist of two lines. The first line should have your TMDb API key.
 - The second line should have a pattern, that will be used for the rename.
 - In the pattern, the variables need to be enclosed in {{}}, the supported variables are `title`, `year` and `director`.
 - Default pattern is `{title} ({year}) - {director}`. Extension is always kept.
-- Passing `--directory` assumes that the arguments are directory names, which contain exactly one movie and optionally subtitles.
+- Passing `--directory` or `-d` assumes that the arguments are directory names, which contain exactly one movie and optionally subtitles.
+- Passing `--dry-run` or `-n` does a dry tun and only prints out the new names, without actually doing anything.
+- Passing `-nd` or `-dn` does a dry run in directory mode.
+- Passing `--help` or `-h` shows help and exits.
+- Passing `--version` or `-v` shows version and exits.
 
 - I plan to add more variables in the future. Support for TV Shows will not be added, since [tvnamer](https://github.com/dbr/tvnamer) does that excellently.
