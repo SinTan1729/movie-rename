@@ -31,9 +31,10 @@ pub fn process_file(
         }
         None => {}
     }
+    println!("  Processing {}...", file_base);
 
     // Parse the filename for metadata
-    let metadata = Metadata::from(file_base.as_str()).expect("Could not parse filename!");
+    let metadata = Metadata::from(file_base.as_str()).expect("  Could not parse filename!");
     // Search using the TMDb API
     let mut search = tmdb.search();
     search.title(metadata.title());
@@ -47,7 +48,7 @@ pub fn process_file(
     if let Ok(search_results) = search.execute() {
         results = search_results.results;
     } else {
-        eprintln!("There was an error while searching {}!", filename);
+        eprintln!("  There was an error while searching {}!", file_base);
     }
 
     let mut movie_list: Vec<MovieEntry> = Vec::new();
@@ -73,17 +74,17 @@ pub fn process_file(
 
     // If nothing is found, skip
     if movie_list.len() == 0 {
-        eprintln!("Could not find any entries matching {}!", filename);
+        eprintln!("  Could not find any entries matching {}!", file_base);
         return ("".to_string(), true);
     }
 
     // Choose from the possible entries
     let choice = Select::new(
-        format!("Possible choices for {}:", file_base).as_str(),
+        format!("  Possible choices for {}:", file_base).as_str(),
         movie_list,
     )
     .prompt()
-    .expect("Invalid choice!");
+    .expect("  Invalid choice!");
 
     let mut extension = metadata.extension().unwrap_or("").to_string();
     // Handle the case for subtitle files
@@ -93,15 +94,16 @@ pub fn process_file(
         let filename_parts: Vec<&str> = filename.rsplit(".").collect();
         if filename_parts.len() >= 3 && filename_parts[1].len() == 2 {
             println!(
-                "Keeping language {} as detected in the subtitle file's extension...",
+                "  Keeping language {} as detected in the subtitle file's extension...",
                 get_long_lang(filename_parts[1])
             );
             extension = format!("{}.{}", filename_parts[1], extension);
         } else {
             let lang_list = Language::generate_list();
-            let lang_choice = Select::new("Choose the language for the subtitle file:", lang_list)
-                .prompt()
-                .expect("Invalid choice!");
+            let lang_choice =
+                Select::new("  Choose the language for the subtitle file:", lang_list)
+                    .prompt()
+                    .expect("  Invalid choice!");
             if lang_choice.short != "none".to_string() {
                 extension = format!("{}.{}", lang_choice.short, extension);
             }
@@ -122,15 +124,15 @@ pub fn process_file(
 
     // Process the renaming
     if *filename == new_name {
-        println!("[file] '{}' already has correct name.", file_base);
+        println!("  [file] '{}' already has correct name.", file_base);
     } else {
-        println!("[file] '{}' -> '{}'", file_base, new_name_with_ext);
+        println!("  [file] '{}' -> '{}'", file_base, new_name_with_ext);
         // Only do the rename of --dry-run isn't passed
         if dry_run == false {
             if Path::new(new_name.as_str()).is_file() == false {
-                fs::rename(filename, new_name.as_str()).expect("Unable to rename file!");
+                fs::rename(filename, new_name.as_str()).expect("  Unable to rename file!");
             } else {
-                eprintln!("Destination file already exists, skipping...");
+                eprintln!("  Destination file already exists, skipping...");
             }
         }
     }
