@@ -2,6 +2,15 @@
 name = "movie-rename"
 version = "1.2.1"
 edition = "2021"
+authors = ["Sayantan Santra <sayantan[dot]santra689[at]gmail[dot]com"]
+license = "GPL-3.0"
+description = "A simple tool to rename movies, written in Rust."
+homepage = "https://github.com/SinTan1729/movie-rename"
+documentation = "https://docs.rs/movie-rename"
+repository = "https://github.com/SinTan1729/movie-rename"
+readme = "README.md"
+keywords = ["rename", "movie", "media", "tmdb"]
+categories = ["command-line-utilities"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

@@ -8,7 +8,7 @@ It turns `Apur Sansar.mkv` into `Apur Sansar (1959) - Satyajit Ray.mkv` using me
 This is made mostly due to [mnamer](https://github.com/jkwill87/mnamer) not having support for director's name, and also because I wanted to try writing something useful in Rust.
 
 ## Installation
-Install from [AUR](https://aur.archlinux.org/packages/movie-rename-bin), my personal [lure-repo](https://github.com/SinTan1729/lure-repo) or download the binary from the releases.
+Install from [AUR](https://aur.archlinux.org/packages/movie-rename-bin), my personal [lure-repo](https://github.com/SinTan1729/lure-repo) or download the binary from the releases. You can also get it from [crates.io](https://crates.io/crates/movie-rename).
 
 ## Usage
 - The syntax is:
