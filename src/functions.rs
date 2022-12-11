@@ -6,7 +6,7 @@ use std::{collections::HashMap, fs, path::Path, process::exit};
 use tmdb::{model::*, themoviedb::*};
 use torrent_name_parser::Metadata;
 
-use crate::structs::{Language, MovieEntry};
+use crate::structs::{get_long_lang, Language, MovieEntry};
 
 // Get the version from Cargo.toml
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -89,12 +89,22 @@ pub fn process_file(
     // Handle the case for subtitle files
     let mut is_subtitle = false;
     if ["srt", "ssa"].contains(&extension.as_str()) {
-        let lang_list = Language::generate_list();
-        let lang_choice = Select::new("Choose the language for the subtitle file:", lang_list)
-            .prompt()
-            .expect("Invalid choice!");
-        if lang_choice.short != "none".to_string() {
-            extension = format!("{}.{}", lang_choice.short, extension);
+        // Try to detect if there's already language info in the filename, else ask user to choose
+        let filename_parts: Vec<&str> = filename.rsplit(".").collect();
+        if filename_parts.len() >= 3 && filename_parts[1].len() == 2 {
+            println!(
+                "Keeping language {} as detected in the subtitle file's extension...",
+                get_long_lang(filename_parts[1])
+            );
+            extension = format!("{}.{}", filename_parts[1], extension);
+        } else {
+            let lang_list = Language::generate_list();
+            let lang_choice = Select::new("Choose the language for the subtitle file:", lang_list)
+                .prompt()
+                .expect("Invalid choice!");
+            if lang_choice.short != "none".to_string() {
+                extension = format!("{}.{}", lang_choice.short, extension);
+            }
         }
         is_subtitle = true;
     }

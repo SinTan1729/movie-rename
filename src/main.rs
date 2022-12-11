@@ -38,7 +38,8 @@ fn main() {
 
     // Iterate over entries
     for entry in entries {
-        // Check if the file/directory exists on disk
+        // Check if the file/directory exists on disk and run necessary commands
+        // TODO: Detect subtitle files with same name/metadata and process them automatically without repeated input
         match settings["directory"] {
             // Normal file
             false => {

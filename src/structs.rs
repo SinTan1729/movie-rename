@@ -80,7 +80,7 @@ impl fmt::Display for Language {
 }
 
 // Get long name of a language
-fn get_long_lang(short: &str) -> String {
+pub fn get_long_lang(short: &str) -> String {
     let long = match short {
         "en" => "English",
         "hi" => "Hindi",
