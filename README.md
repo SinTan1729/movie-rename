@@ -1,4 +1,5 @@
 ![latest-release](https://img.shields.io/github/v/release/SinTan1729/movie-rename?label=latest%20release) ![commits-since-latest-release](https://img.shields.io/github/commits-since/SInTan1729/movie-rename/latest?label=commits%20since%20latest%20release)
+[![AUR package](https://img.shields.io/aur/version/movie-rename-bin?label=AUR&logo=archlinux)](https://aur.archlinux.org/packages/movie-rename-bin/)
 # `movie-rename`
 
 ### A simple tool to rename movies, written in Rust.
