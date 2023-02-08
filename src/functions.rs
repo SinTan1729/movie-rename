@@ -199,6 +199,7 @@ pub fn process_args(mut args: Vec<String>) -> (Vec<String>, HashMap<&'static str
     }
     (entries, settings)
 }
+
 // RenderConfig for the menu items
 fn get_render_config() -> RenderConfig {
     let mut render_config = RenderConfig::default();
