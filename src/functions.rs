@@ -35,6 +35,14 @@ pub fn process_file(
 
     // Parse the filename for metadata
     let metadata = Metadata::from(file_base.as_str()).expect("  Could not parse filename!");
+
+    // Process only if it's a valid file format
+    let mut extension = metadata.extension().unwrap_or("").to_string();
+    if !["mp4", "avi", "mkv", "flv", "m4a", "srt", "ssa"].contains(&extension.as_str()) {
+        println!("  Ignoring {}...", file_base);
+        return ("n/a".to_string(), false);
+    }
+
     // Search using the TMDb API
     let mut search = tmdb.search();
     search.title(metadata.title());
@@ -86,7 +94,6 @@ pub fn process_file(
     .prompt()
     .expect("  Invalid choice!");
 
-    let mut extension = metadata.extension().unwrap_or("").to_string();
     // Handle the case for subtitle files
     let mut is_subtitle = false;
     if ["srt", "ssa"].contains(&extension.as_str()) {

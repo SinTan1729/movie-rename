@@ -66,6 +66,11 @@ fn main() {
                                     pattern,
                                     settings["dry_run"],
                                 );
+
+                                if movie_name_temp == "n/a".to_string() {
+                                    continue;
+                                }
+
                                 if is_subtitle == false {
                                     movie_count += 1;
                                     movie_name = movie_name_temp;
