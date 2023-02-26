@@ -12,6 +12,13 @@ This is made mostly due to [mnamer](https://github.com/jkwill87/mnamer) not havi
 ## Installation
 Install from [AUR](https://aur.archlinux.org/packages/movie-rename-bin), my personal [lure-repo](https://github.com/SinTan1729/lure-repo) or download the binary from the releases. You can also get it from [crates.io](https://crates.io/crates/movie-rename).
 
+You can also install from source by using
+```
+git clone https://github.com/SinTan1729/movie-rename
+cd movie-rename
+sudo make install
+```
+
 ## Usage
 - The syntax is:
 
