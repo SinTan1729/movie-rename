@@ -5,7 +5,7 @@
 
 ### A simple tool to rename movies, written in Rust.
 
-It turns `Apur.Sansar.HEVC.2160p.AC3.mkv` into `Apur Sansar (1959) - Satyajit Ray.mkv` using metadata pulled from [TMDb](https://www.themoviedb.org/).
+It turns a file like `Apur.Sansar.HEVC.2160p.AC3.mkv` into `Apur Sansar (1959) - Satyajit Ray.mkv` using metadata pulled from [TMDB](https://www.themoviedb.org/).
 
 This is made mostly due to [mnamer](https://github.com/jkwill87/mnamer) not having support for director's name, and also because I wanted to try writing something useful in Rust.
 
@@ -24,7 +24,7 @@ sudo make install
 
     `movie-rename <filename(s)> [-n|--dry-run] [-d|--directory] [-h|--help] [-v|--version]`
 - There needs to be a config file named `config` in the `$XDG_CONFIG_HOME/movie-rename/` directory.
-- It should consist of two lines. The first line should have your [TMDb API key](https://developers.themoviedb.org/3/getting-started/authentication).
+- It should consist of two lines. The first line should have your [TMDB API key](https://developers.themoviedb.org/3/getting-started/authentication).
 - The second line should have a pattern, that will be used for the rename.
 - In the pattern, the variables need to be enclosed in {{}}, the supported variables are `title`, `year` and `director`.
 - Default pattern is `{title} ({year}) - {director}`. Extension is always kept.
