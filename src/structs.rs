@@ -50,7 +50,7 @@ impl fmt::Display for MovieEntry {
             get_long_lang(self.language.as_str())
         ));
         buffer.push_str(&format!("Directed by: {}, ", self.director));
-        buffer.push_str(&format!("TMDb ID: {}", self.id));
+        buffer.push_str(&format!("TMDB ID: {}", self.id));
         // buffer.push_str(&format!("Synopsis: {}", self.overview));
         write!(f, "{}", buffer)
     }

@@ -21,12 +21,18 @@ fn main() {
         config_file.push_str("/.config");
     }
     config_file.push_str("/movie-rename/config");
+
+    if Path::new(config_file.as_str()).is_file() == false {
+        eprintln!("Error reading the config file. Pass --help to see help.");
+        exit(2);
+    }
+
     let mut config = load_str!(config_file.as_str()).lines();
     let api_key = config.next().unwrap_or("");
     let pattern = config.next().unwrap_or("{title} ({year}) - {director}");
 
     if api_key == "" {
-        eprintln!("Error reading the config file. Pass --help to see help.");
+        eprintln!("Could not read the API key. Pass --help to see help.");
         exit(2);
     }
 
