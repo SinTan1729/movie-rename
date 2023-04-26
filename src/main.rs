@@ -16,13 +16,13 @@ fn main() {
 
     // Try to read config file, or display error
     let mut config_file = env::var("XDG_CONFIG_HOME").unwrap_or("$HOME".to_string());
-    if config_file == String::from("$HOME") {
+    if config_file == *"$HOME" {
         config_file = env::var("$HOME").unwrap();
         config_file.push_str("/.config");
     }
     config_file.push_str("/movie-rename/config");
 
-    if Path::new(config_file.as_str()).is_file() == false {
+    if !Path::new(config_file.as_str()).is_file() {
         eprintln!("Error reading the config file. Pass --help to see help.");
         exit(2);
     }
@@ -31,14 +31,14 @@ fn main() {
     let api_key = config.next().unwrap_or("");
     let pattern = config.next().unwrap_or("{title} ({year}) - {director}");
 
-    if api_key == "" {
+    if api_key.is_empty() {
         eprintln!("Could not read the API key. Pass --help to see help.");
         exit(2);
     }
 
     // Create TMDb object for API calls
     let tmdb = TMDb {
-        api_key: api_key,
+        api_key,
         language: "en",
     };
 
@@ -49,7 +49,7 @@ fn main() {
         match settings["directory"] {
             // Normal file
             false => {
-                if Path::new(entry.as_str()).is_file() == true {
+                if Path::new(entry.as_str()).is_file() {
                     // Process the filename for movie entries
                     process_file(&entry, &tmdb, pattern, settings["dry_run"]);
                 } else {
@@ -59,7 +59,7 @@ fn main() {
             }
             // Directory
             true => {
-                if Path::new(entry.as_str()).is_dir() == true {
+                if Path::new(entry.as_str()).is_dir() {
                     println!("Processing files inside the directory {}...", entry);
                     let mut movie_count = 0;
                     let mut movie_name = String::new();
@@ -73,11 +73,11 @@ fn main() {
                                     settings["dry_run"],
                                 );
 
-                                if movie_name_temp == "n/a".to_string() {
+                                if movie_name_temp == *"n/a" {
                                     continue;
                                 }
 
-                                if is_subtitle == false {
+                                if !is_subtitle {
                                     movie_count += 1;
                                     movie_name = movie_name_temp;
                                 }
@@ -88,13 +88,13 @@ fn main() {
                         continue;
                     }
                     if movie_count == 1 {
-                        let entry_clean = entry.trim_end_matches("/");
+                        let entry_clean = entry.trim_end_matches('/');
                         if entry_clean == movie_name {
                             println!("[directory] '{}' already has correct name.", entry_clean);
                         } else {
                             println!("[directory] '{}' -> '{}'", entry_clean, movie_name);
-                            if settings["dry_run"] == false {
-                                if Path::new(movie_name.as_str()).is_dir() == false {
+                            if !settings["dry_run"] {
+                                if !Path::new(movie_name.as_str()).is_dir() {
                                     fs::rename(entry, movie_name)
                                         .expect("Unable to rename directory!");
                                 } else {

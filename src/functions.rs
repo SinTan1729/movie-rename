@@ -24,12 +24,11 @@ pub fn process_file(
     // Get the basename
     let mut file_base = String::from(filename);
     let mut parent = String::from("");
-    match filename.rsplit_once("/") {
-        Some(parts) => {
+    if let Some(parts) = filename.rsplit_once('/') {
+        {
             parent = parts.0.to_string();
             file_base = parts.1.to_string();
         }
-        None => {}
     }
     println!("  Processing {}...", file_base);
 
@@ -81,7 +80,7 @@ pub fn process_file(
     }
 
     // If nothing is found, skip
-    if movie_list.len() == 0 {
+    if movie_list.is_empty() {
         eprintln!("  Could not find any entries matching {}!", file_base);
         return ("".to_string(), true);
     }
@@ -98,7 +97,7 @@ pub fn process_file(
     let mut is_subtitle = false;
     if ["srt", "ssa"].contains(&extension.as_str()) {
         // Try to detect if there's already language info in the filename, else ask user to choose
-        let filename_parts: Vec<&str> = filename.rsplit(".").collect();
+        let filename_parts: Vec<&str> = filename.rsplit('.').collect();
         if filename_parts.len() >= 3 && filename_parts[1].len() == 2 {
             println!(
                 "  Keeping language {} as detected in the subtitle file's extension...",
@@ -111,7 +110,7 @@ pub fn process_file(
                 Select::new("  Choose the language for the subtitle file:", lang_list)
                     .prompt()
                     .expect("  Invalid choice!");
-            if lang_choice.short != "none".to_string() {
+            if lang_choice.short != *"none" {
                 extension = format!("{}.{}", lang_choice.short, extension);
             }
         }
@@ -121,11 +120,11 @@ pub fn process_file(
     // Create the new name
     let new_name_base = choice.rename_format(pattern.to_string());
     let mut new_name_with_ext = new_name_base.clone();
-    if extension != "" {
+    if !extension.is_empty() {
         new_name_with_ext = format!("{}.{}", new_name_with_ext, extension);
     }
-    let mut new_name = String::from(new_name_with_ext.clone());
-    if parent != "".to_string() {
+    let mut new_name = new_name_with_ext.clone();
+    if parent != *"" {
         new_name = format!("{}/{}", parent, new_name);
     }
 
@@ -135,8 +134,8 @@ pub fn process_file(
     } else {
         println!("  [file] '{}' -> '{}'", file_base, new_name_with_ext);
         // Only do the rename of --dry-run isn't passed
-        if dry_run == false {
-            if Path::new(new_name.as_str()).is_file() == false {
+        if !dry_run {
+            if !Path::new(new_name.as_str()).is_file() {
                 fs::rename(filename, new_name.as_str()).expect("  Unable to rename file!");
             } else {
                 eprintln!("  Destination file already exists, skipping...");
@@ -195,7 +194,7 @@ pub fn process_args(mut args: Vec<String>) -> (Vec<String>, HashMap<&'static str
                 settings.entry("directory").and_modify(|x| *x = true);
             }
             other => {
-                if other.starts_with("-") {
+                if other.starts_with('-') {
                     eprintln!("Unknown argument passed: {}", other);
                     exit(1);
                 } else {
