@@ -15,10 +15,11 @@ categories = ["command-line-utilities"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-torrent-name-parser = "0.11.0"
-tmdb = "3.0.0"
-inquire = "0.5.3"
+torrent-name-parser = "0.12.1"
+tmdb-api = "0.4.0"
+inquire = "0.6.2"
 load_file = "1.0.1"
+tokio = { version = "1.28.1", features = ["macros", "rt-multi-thread"] }
 
 [profile.release]
 strip = true

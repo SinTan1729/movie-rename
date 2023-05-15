@@ -1,5 +1,5 @@
 use std::fmt;
-use tmdb::model::*;
+use tmdb_api::movie::MovieShort;
 
 // Struct for movie entries
 pub struct MovieEntry {
@@ -12,13 +12,16 @@ pub struct MovieEntry {
 
 impl MovieEntry {
     // Create movie entry from results
-    pub fn from(movie: SearchMovie) -> MovieEntry {
+    pub fn from(movie: MovieShort) -> MovieEntry {
         MovieEntry {
-            title: movie.title,
-            id: movie.id,
+            title: movie.inner.title,
+            id: movie.inner.id,
             director: String::from("N/A"),
-            year: String::from(movie.release_date.split('-').next().unwrap_or("N/A")),
-            language: get_long_lang(movie.original_language.as_str()),
+            year: match movie.inner.release_date {
+                Some(date) => date.format("%Y").to_string(),
+                _ => "N/A".to_string(),
+            },
+            language: get_long_lang(movie.inner.original_language.as_str()),
         }
     }
 

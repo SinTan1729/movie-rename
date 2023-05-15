@@ -3,7 +3,11 @@ use inquire::{
     Select,
 };
 use std::{collections::HashMap, fs, path::Path, process::exit};
-use tmdb::{model::*, themoviedb::*};
+use tmdb_api::{
+    movie::{credits::MovieCredits, search::MovieSearch},
+    prelude::Command,
+    Client,
+};
 use torrent_name_parser::Metadata;
 
 use crate::structs::{get_long_lang, Language, MovieEntry};
@@ -12,9 +16,9 @@ use crate::structs::{get_long_lang, Language, MovieEntry};
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 // Function to process movie entries
-pub fn process_file(
+pub async fn process_file(
     filename: &String,
-    tmdb: &TMDb,
+    tmdb: &Client,
     pattern: &str,
     dry_run: bool,
 ) -> (String, bool) {
@@ -43,40 +47,37 @@ pub fn process_file(
     }
 
     // Search using the TMDb API
-    let mut search = tmdb.search();
-    search.title(metadata.title());
+    let year = metadata.year().map(|y| y as u16);
+    let search = MovieSearch::new(metadata.title().to_string()).with_year(year);
+    let reply = search.execute(tmdb).await;
 
-    // Check if year is present in filename
-    if let Some(year) = metadata.year() {
-        search.year(year as u64);
-    }
-
-    let mut results = Vec::new();
-    if let Ok(search_results) = search.execute() {
-        results = search_results.results;
-    } else {
-        eprintln!("  There was an error while searching {}!", file_base);
-    }
+    let results = match reply {
+        Ok(res) => Ok(res.results),
+        Err(e) => {
+            eprintln!("  There was an error while searching {}!", file_base);
+            Err(e)
+        }
+    };
 
     let mut movie_list: Vec<MovieEntry> = Vec::new();
     // Create movie entry from the result
-    for result in results {
-        let mut movie_details = MovieEntry::from(result);
-        // Get director's name, if needed
-        if pattern.contains("{director}") {
-            let with_credits: Result<Movie, _> =
-                tmdb.fetch().id(movie_details.id).append_credits().execute();
-            if let Ok(movie) = with_credits {
-                if let Some(cre) = movie.credits {
-                    let mut directors = cre.crew;
-                    directors.retain(|x| x.job == "Director");
-                    for person in directors {
-                        movie_details.director = person.name;
+    if results.is_ok() {
+        for result in results.unwrap() {
+            let mut movie_details = MovieEntry::from(result);
+            // Get director's name, if needed
+            if pattern.contains("{director}") {
+                let credits_search = MovieCredits::new(movie_details.id);
+                let credits_reply = credits_search.execute(tmdb).await;
+                if credits_reply.is_ok() {
+                    let mut crew = credits_reply.unwrap().crew;
+                    crew.retain(|x| x.job == *"Director");
+                    for person in crew {
+                        movie_details.director = person.person.name;
                     }
                 }
             }
+            movie_list.push(movie_details);
         }
-        movie_list.push(movie_details);
     }
 
     // If nothing is found, skip

@@ -1,13 +1,14 @@
 use load_file::{self, load_str};
 use std::{env, fs, path::Path, process::exit};
-use tmdb::themoviedb::*;
+use tmdb_api::Client;
 
 // Import all the modules
 mod functions;
 use functions::{process_args, process_file};
 mod structs;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     // Read arguments from commandline
     let args: Vec<String> = env::args().collect();
 
@@ -37,10 +38,7 @@ fn main() {
     }
 
     // Create TMDb object for API calls
-    let tmdb = TMDb {
-        api_key,
-        language: "en",
-    };
+    let tmdb = Client::new(api_key.to_string());
 
     // Iterate over entries
     for entry in entries {
@@ -51,7 +49,7 @@ fn main() {
             false => {
                 if Path::new(entry.as_str()).is_file() {
                     // Process the filename for movie entries
-                    process_file(&entry, &tmdb, pattern, settings["dry_run"]);
+                    process_file(&entry, &tmdb, pattern, settings["dry_run"]).await;
                 } else {
                     eprintln!("The file {} wasn't found on disk, skipping...", entry);
                     continue;
@@ -71,7 +69,8 @@ fn main() {
                                     &tmdb,
                                     pattern,
                                     settings["dry_run"],
-                                );
+                                )
+                                .await;
 
                                 if movie_name_temp == *"n/a" {
                                     continue;
