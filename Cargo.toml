@@ -1,6 +1,6 @@
 [package]
 name = "movie-rename"
-version = "1.2.4"
+version = "2.0.0"
 edition = "2021"
 authors = ["Sayantan Santra <sayantan[dot]santra689[at]gmail[dot]com"]
 license = "GPL-3.0"
