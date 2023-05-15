@@ -70,9 +70,16 @@ pub async fn process_file(
                 let credits_reply = credits_search.execute(tmdb).await;
                 if credits_reply.is_ok() {
                     let mut crew = credits_reply.unwrap().crew;
+                    // Only keep the director(s)
                     crew.retain(|x| x.job == *"Director");
-                    for person in crew {
-                        movie_details.director = person.person.name;
+                    if !crew.is_empty() {
+                        let directors: Vec<String> =
+                            crew.iter().map(|x| x.person.name.clone()).collect();
+                        let mut directors_text = directors.join(", ");
+                        if let Some(pos) = directors_text.rfind(',') {
+                            directors_text.replace_range(pos..pos + 2, " and ");
+                        }
+                        movie_details.director = directors_text;
                     }
                 }
             }
