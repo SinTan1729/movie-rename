@@ -95,12 +95,18 @@ pub async fn process_file(
     }
 
     // Choose from the possible entries
-    let choice = Select::new(
+    let choice = match Select::new(
         format!("  Possible choices for {}:", file_base).as_str(),
         movie_list,
     )
     .prompt()
-    .expect("  Invalid choice!");
+    {
+        Ok(movie) => movie,
+        Err(error) => {
+            println!("  {error}");
+            return ("".to_string(), true);
+        }
+    };
 
     // Handle the case for subtitle files
     let mut is_subtitle = false;
