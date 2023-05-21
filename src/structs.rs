@@ -27,18 +27,32 @@ impl MovieEntry {
 
     // Generate desired filename from movie entry
     pub fn rename_format(&self, mut format: String) -> String {
-        format = format.replace("{title}", self.title.as_str());
+        const PATTERN: &str = "^~#%$*+={}?@'`/\\\"><|:&!";
+        // Try to sanitize the title to avoid some characters
+        let mut title = self.title.clone();
+        title.retain(|c| !PATTERN.contains(c));
+        title.truncate(159);
+        format = format.replace("{title}", title.as_str());
+
         if self.year.as_str() != "N/A" {
             format = format.replace("{year}", self.year.as_str());
         } else {
             format = format.replace("{year}", "");
         }
+
         if self.director.as_str() != "N/A" {
-            format = format.replace("{director}", self.director.as_str());
+            // Try to sanitize the director's name to avoid some characters
+            let mut director = self.director.clone();
+            director.retain(|c| !PATTERN.contains(c));
+            director.truncate(63);
+            format = format.replace("{director}", director.as_str());
         } else {
             format = format.replace("{director}", "");
         }
         format
+            .trim_matches(|c| "- ".contains(c))
+            .replace("--", "-")
+            .replace("- ", "")
     }
 }
 
