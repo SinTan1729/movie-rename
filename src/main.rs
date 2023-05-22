@@ -90,6 +90,11 @@ async fn main() {
                     if movie_list.len() == 1 {
                         let entry_clean = entry.trim_end_matches('/');
                         let movie_name = movie_list.into_values().next().unwrap();
+                        // If the file was ignored, exit
+                        if movie_name.is_empty() {
+                            eprintln!("Not renaming directory as only movie was skipped.");
+                            continue;
+                        }
 
                         if entry_clean == movie_name {
                             println!("[directory] '{entry_clean}' already has correct name.");
