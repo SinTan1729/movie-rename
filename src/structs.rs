@@ -49,10 +49,14 @@ impl MovieEntry {
         } else {
             format = format.replace("{director}", "");
         }
+
+        // Try to clean extra spaces and such
+        format = format.trim_matches(|c| "- ".contains(c)).to_string();
+        while format.contains("- -") {
+            format = format.replace("- -", "-");
+        }
+
         format
-            .trim_matches(|c| "- ".contains(c))
-            .replace("--", "-")
-            .replace("- ", "")
     }
 }
 
