@@ -1,5 +1,5 @@
 use load_file::{self, load_str};
-use std::{env, fs, path::Path, process::exit};
+use std::{collections::HashMap, env, fs, path::Path, process::exit};
 use tmdb_api::Client;
 
 // Import all the modules
@@ -43,13 +43,12 @@ async fn main() {
     // Iterate over entries
     for entry in entries {
         // Check if the file/directory exists on disk and run necessary commands
-        // TODO: Detect subtitle files with same name/metadata and process them automatically without repeated input
         match settings["directory"] {
             // Normal file
             false => {
                 if Path::new(entry.as_str()).is_file() {
                     // Process the filename for movie entries
-                    process_file(&entry, &tmdb, pattern, settings["dry_run"]).await;
+                    process_file(&entry, &tmdb, pattern, settings["dry_run"], None).await;
                 } else {
                     eprintln!("The file {} wasn't found on disk, skipping...", entry);
                     continue;
@@ -59,26 +58,28 @@ async fn main() {
             true => {
                 if Path::new(entry.as_str()).is_dir() {
                     println!("Processing files inside the directory {}...", entry);
-                    let mut movie_count = 0;
-                    let mut movie_name = String::new();
+                    let mut movie_list = HashMap::new();
+
                     if let Ok(files_in_dir) = fs::read_dir(entry.as_str()) {
                         for file in files_in_dir {
                             if file.is_ok() {
-                                let (movie_name_temp, is_subtitle) = process_file(
-                                    &format!("{}", file.unwrap().path().display()),
-                                    &tmdb,
-                                    pattern,
-                                    settings["dry_run"],
-                                )
-                                .await;
+                                let filename = file.unwrap().path().display().to_string();
+                                let (filename_without_ext, movie_name_temp, add_to_list) =
+                                    process_file(
+                                        &filename,
+                                        &tmdb,
+                                        pattern,
+                                        settings["dry_run"],
+                                        Some(&movie_list),
+                                    )
+                                    .await;
 
-                                if movie_name_temp == *"n/a" {
-                                    continue;
-                                }
+                                // if movie_name_temp.is_empty() {
+                                //     continue;
+                                // }
 
-                                if !is_subtitle {
-                                    movie_count += 1;
-                                    movie_name = movie_name_temp;
+                                if add_to_list {
+                                    movie_list.insert(filename_without_ext, movie_name_temp);
                                 }
                             }
                         }
@@ -86,8 +87,10 @@ async fn main() {
                         eprintln!("There was an error accessing the directory {}!", entry);
                         continue;
                     }
-                    if movie_count == 1 {
+                    if movie_list.len() == 1 {
                         let entry_clean = entry.trim_end_matches('/');
+                        let movie_name = movie_list.into_values().next().unwrap();
+
                         if entry_clean == movie_name {
                             println!("[directory] '{}' already has correct name.", entry_clean);
                         } else {
