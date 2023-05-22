@@ -1,6 +1,6 @@
 use inquire::{
     ui::{Color, IndexPrefix, RenderConfig, Styled},
-    Select,
+    InquireError, Select,
 };
 use std::{collections::HashMap, fs, path::Path, process::exit};
 use tmdb_api::{
@@ -137,7 +137,11 @@ pub async fn process_file(
             Ok(movie) => movie,
             Err(error) => {
                 println!("  {error}");
-                return (filename_without_ext, "".to_string(), false);
+                let flag = matches!(
+                    error,
+                    InquireError::OperationCanceled | InquireError::OperationInterrupted
+                );
+                return (filename_without_ext, "".to_string(), flag);
             }
         };
 
