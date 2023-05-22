@@ -62,10 +62,7 @@ pub async fn process_file(
 
     // Check if it should be ignored
     if preprocessed && new_name_base.is_empty() {
-        eprintln!(
-            "  Ignoring {} as per previous choice for related files...",
-            file_base
-        );
+        eprintln!("  Ignoring {file_base} as per previous choice for related files...");
         return (filename_without_ext, "".to_string(), false);
     }
 
@@ -75,9 +72,9 @@ pub async fn process_file(
     // Process only if it's a valid file format
     let mut extension = metadata.extension().unwrap_or("").to_string();
     if ["mp4", "avi", "mkv", "flv", "m4a", "srt", "ssa"].contains(&extension.as_str()) {
-        println!("  Processing {}...", file_base);
+        println!("  Processing {file_base}...");
     } else {
-        println!("  Ignoring {}...", file_base);
+        println!("  Ignoring {file_base}...");
         return (filename_without_ext, "".to_string(), false);
     }
 
@@ -91,7 +88,7 @@ pub async fn process_file(
         let results = match reply {
             Ok(res) => Ok(res.results),
             Err(e) => {
-                eprintln!("  There was an error while searching {}!", file_base);
+                eprintln!("  There was an error while searching {file_base}!");
                 Err(e)
             }
         };
@@ -126,13 +123,13 @@ pub async fn process_file(
 
         // If nothing is found, skip
         if movie_list.is_empty() {
-            eprintln!("  Could not find any entries matching {}!", file_base);
+            eprintln!("  Could not find any entries matching {file_base}!");
             return (filename_without_ext, "".to_string(), true);
         }
 
         // Choose from the possible entries
         let choice = match Select::new(
-            format!("  Possible choices for {}:", file_base).as_str(),
+            format!("  Possible choices for {file_base}:").as_str(),
             movie_list,
         )
         .prompt()
@@ -174,18 +171,18 @@ pub async fn process_file(
     // Add extension and stuff to the new name
     let mut new_name_with_ext = new_name_base.clone();
     if !extension.is_empty() {
-        new_name_with_ext = format!("{}.{}", new_name_with_ext, extension);
+        new_name_with_ext = format!("{new_name_with_ext}.{extension}");
     }
     let mut new_name = new_name_with_ext.clone();
     if parent != *"" {
-        new_name = format!("{}/{}", parent, new_name);
+        new_name = format!("{parent}/{new_name}");
     }
 
     // Process the renaming
     if *filename == new_name {
-        println!("  [file] '{}' already has correct name.", file_base);
+        println!("  [file] '{file_base}' already has correct name.");
     } else {
-        println!("  [file] '{}' -> '{}'", file_base, new_name_with_ext);
+        println!("  [file] '{file_base}' -> '{new_name_with_ext}'");
         // Only do the rename of --dry-run isn't passed
         if !dry_run {
             if !Path::new(new_name.as_str()).is_file() {
@@ -230,7 +227,7 @@ pub fn process_args(mut args: Vec<String>) -> (Vec<String>, HashMap<&'static str
                 exit(0);
             }
             "--version" | "-v" => {
-                println!("movie-rename {}", VERSION);
+                println!("movie-rename {VERSION}");
                 exit(0);
             }
             "--dry-run" | "-n" => {
@@ -248,7 +245,7 @@ pub fn process_args(mut args: Vec<String>) -> (Vec<String>, HashMap<&'static str
             }
             other => {
                 if other.starts_with('-') {
-                    eprintln!("Unknown argument passed: {}", other);
+                    eprintln!("Unknown argument passed: {other}");
                     exit(1);
                 } else {
                     entries.push(arg);

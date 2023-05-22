@@ -73,7 +73,7 @@ impl fmt::Display for MovieEntry {
         buffer.push_str(&format!("Directed by: {}, ", self.director));
         buffer.push_str(&format!("TMDB ID: {}", self.id));
         // buffer.push_str(&format!("Synopsis: {}", self.overview));
-        write!(f, "{}", buffer)
+        write!(f, "{buffer}")
     }
 }
 

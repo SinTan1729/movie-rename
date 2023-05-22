@@ -50,14 +50,14 @@ async fn main() {
                     // Process the filename for movie entries
                     process_file(&entry, &tmdb, pattern, settings["dry_run"], None).await;
                 } else {
-                    eprintln!("The file {} wasn't found on disk, skipping...", entry);
+                    eprintln!("The file {entry} wasn't found on disk, skipping...");
                     continue;
                 }
             }
             // Directory
             true => {
                 if Path::new(entry.as_str()).is_dir() {
-                    println!("Processing files inside the directory {}...", entry);
+                    println!("Processing files inside the directory {entry}...");
                     let mut movie_list = HashMap::new();
 
                     if let Ok(files_in_dir) = fs::read_dir(entry.as_str()) {
@@ -84,7 +84,7 @@ async fn main() {
                             }
                         }
                     } else {
-                        eprintln!("There was an error accessing the directory {}!", entry);
+                        eprintln!("There was an error accessing the directory {entry}!");
                         continue;
                     }
                     if movie_list.len() == 1 {
@@ -92,9 +92,9 @@ async fn main() {
                         let movie_name = movie_list.into_values().next().unwrap();
 
                         if entry_clean == movie_name {
-                            println!("[directory] '{}' already has correct name.", entry_clean);
+                            println!("[directory] '{entry_clean}' already has correct name.");
                         } else {
-                            println!("[directory] '{}' -> '{}'", entry_clean, movie_name);
+                            println!("[directory] '{entry_clean}' -> '{movie_name}'");
                             if !settings["dry_run"] {
                                 if !Path::new(movie_name.as_str()).is_dir() {
                                     fs::rename(entry, movie_name)
@@ -105,10 +105,10 @@ async fn main() {
                             }
                         }
                     } else {
-                        eprintln!("Could not determine how to rename the directory {}!", entry);
+                        eprintln!("Could not determine how to rename the directory {entry}!");
                     }
                 } else {
-                    eprintln!("The directory {} wasn't found on disk, skipping...", entry);
+                    eprintln!("The directory {entry} wasn't found on disk, skipping...");
                     continue;
                 }
             }
