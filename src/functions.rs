@@ -62,6 +62,10 @@ pub async fn process_file(
 
     // Check if it should be ignored
     if preprocessed && new_name_base.is_empty() {
+        eprintln!(
+            "  Ignoring {} as per previous choice for related files...",
+            file_base
+        );
         return (filename_without_ext, "".to_string(), false);
     }
 
@@ -140,29 +144,31 @@ pub async fn process_file(
             }
         };
 
-        // Handle the case for subtitle files
-        if ["srt", "ssa"].contains(&extension.as_str()) {
-            // Try to detect if there's already language info in the filename, else ask user to choose
-            if filename_parts.len() >= 3 && filename_parts[1].len() == 2 {
-                println!(
-                    "  Keeping language {} as detected in the subtitle file's extension...",
-                    get_long_lang(filename_parts[1])
-                );
-                extension = format!("{}.{}", filename_parts[1], extension);
-            } else {
-                let lang_list = Language::generate_list();
-                let lang_choice =
-                    Select::new("  Choose the language for the subtitle file:", lang_list)
-                        .prompt()
-                        .expect("  Invalid choice!");
-                if lang_choice.short != *"none" {
-                    extension = format!("{}.{}", lang_choice.short, extension);
-                }
-            }
-        }
-
         // Create the new name
         new_name_base = choice.rename_format(pattern.to_string());
+    } else {
+        println!("  Using previous choice for related files...");
+    }
+
+    // Handle the case for subtitle files
+    if ["srt", "ssa"].contains(&extension.as_str()) {
+        // Try to detect if there's already language info in the filename, else ask user to choose
+        if filename_parts.len() >= 3 && filename_parts[1].len() == 2 {
+            println!(
+                "  Keeping language {} as detected in the subtitle file's extension...",
+                get_long_lang(filename_parts[1])
+            );
+            extension = format!("{}.{}", filename_parts[1], extension);
+        } else {
+            let lang_list = Language::generate_list();
+            let lang_choice =
+                Select::new("  Choose the language for the subtitle file:", lang_list)
+                    .prompt()
+                    .expect("  Invalid choice!");
+            if lang_choice.short != *"none" {
+                extension = format!("{}.{}", lang_choice.short, extension);
+            }
+        }
     }
 
     // Add extension and stuff to the new name
