@@ -16,8 +16,8 @@ async fn main() {
     let (entries, settings) = process_args(args);
 
     // Try to read config file, or display error
-    let mut config_file = env::var("XDG_CONFIG_HOME").unwrap_or("$HOME".to_string());
-    if config_file == *"$HOME" {
+    let mut config_file = env::var("XDG_CONFIG_HOME").unwrap_or(String::from("$HOME"));
+    if config_file == "$HOME" {
         config_file = env::var("$HOME").unwrap();
         config_file.push_str("/.config");
     }
@@ -38,7 +38,7 @@ async fn main() {
     }
 
     // Create TMDb object for API calls
-    let tmdb = Client::new(api_key.to_string());
+    let tmdb = Client::new(String::from(api_key));
 
     // Iterate over entries
     for entry in entries {

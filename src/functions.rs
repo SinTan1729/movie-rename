@@ -146,7 +146,7 @@ pub async fn process_file(
         };
 
         // Create the new name
-        new_name_base = choice.rename_format(pattern.to_string());
+        new_name_base = choice.rename_format(String::from(pattern));
     } else {
         println!("  Using previous choice for related files...");
     }
@@ -178,7 +178,7 @@ pub async fn process_file(
         new_name_with_ext = format!("{new_name_with_ext}.{extension}");
     }
     let mut new_name = new_name_with_ext.clone();
-    if parent != *"" {
+    if !parent.is_empty() {
         new_name = format!("{parent}/{new_name}");
     }
 
