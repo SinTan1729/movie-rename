@@ -29,7 +29,7 @@ pub async fn process_file(
 
     // Get the basename
     let mut file_base = String::from(filename);
-    let mut parent = String::from("");
+    let mut parent = String::new();
     if let Some(parts) = filename.rsplit_once('/') {
         {
             parent = parts.0.to_string();
@@ -63,7 +63,7 @@ pub async fn process_file(
     // Check if it should be ignored
     if preprocessed && new_name_base.is_empty() {
         eprintln!("  Ignoring {file_base} as per previous choice for related files...");
-        return (filename_without_ext, "".to_string(), false);
+        return (filename_without_ext, String::new(), false);
     }
 
     // Parse the filename for metadata
@@ -75,7 +75,7 @@ pub async fn process_file(
         println!("  Processing {file_base}...");
     } else {
         println!("  Ignoring {file_base}...");
-        return (filename_without_ext, "".to_string(), false);
+        return (filename_without_ext, String::new(), false);
     }
 
     // Only do the TMDb API stuff if it's not preprocessed
@@ -124,7 +124,7 @@ pub async fn process_file(
         // If nothing is found, skip
         if movie_list.is_empty() {
             eprintln!("  Could not find any entries matching {file_base}!");
-            return (filename_without_ext, "".to_string(), true);
+            return (filename_without_ext, String::new(), true);
         }
 
         // Choose from the possible entries
@@ -141,7 +141,7 @@ pub async fn process_file(
                     error,
                     InquireError::OperationCanceled | InquireError::OperationInterrupted
                 );
-                return (filename_without_ext, "".to_string(), flag);
+                return (filename_without_ext, String::new(), flag);
             }
         };
 
