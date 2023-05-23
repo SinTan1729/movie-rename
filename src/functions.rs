@@ -32,8 +32,8 @@ pub async fn process_file(
     let mut parent = String::new();
     if let Some(parts) = filename.rsplit_once('/') {
         {
-            parent = parts.0.to_string();
-            file_base = parts.1.to_string();
+            parent = String::from(parts.0);
+            file_base = String::from(parts.1);
         }
     }
 

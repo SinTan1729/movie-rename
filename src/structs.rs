@@ -19,7 +19,7 @@ impl MovieEntry {
             director: String::from("N/A"),
             year: match movie.inner.release_date {
                 Some(date) => date.format("%Y").to_string(),
-                _ => "N/A".to_string(),
+                _ => String::from("N/A"),
             },
             language: get_long_lang(movie.inner.original_language.as_str()),
         }
@@ -34,7 +34,7 @@ impl MovieEntry {
         title.truncate(159);
         format = format.replace("{title}", title.as_str());
 
-        if self.year.as_str() != "N/A" {
+        if self.year != "N/A" {
             format = format.replace("{year}", self.year.as_str());
         } else {
             format = format.replace("{year}", "");
@@ -88,7 +88,7 @@ impl Language {
         let mut list = Vec::new();
         for lang in ["en", "hi", "bn", "fr", "ja", "de", "sp", "none"] {
             list.push(Language {
-                short: lang.to_string(),
+                short: String::from(lang),
                 long: get_long_lang(lang),
             });
         }
@@ -116,5 +116,5 @@ pub fn get_long_lang(short: &str) -> String {
         "none" => "None",
         other => other,
     };
-    long.to_string()
+    String::from(long)
 }
