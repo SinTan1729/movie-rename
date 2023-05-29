@@ -74,10 +74,6 @@ async fn main() {
                                     )
                                     .await;
 
-                                // if movie_name_temp.is_empty() {
-                                //     continue;
-                                // }
-
                                 if add_to_list {
                                     movie_list.insert(filename_without_ext, movie_name_temp);
                                 }
@@ -90,22 +86,30 @@ async fn main() {
                     if movie_list.len() == 1 {
                         let entry_clean = entry.trim_end_matches('/');
                         let movie_name = movie_list.into_values().next().unwrap();
-                        // If the file was ignored, exit
-                        if movie_name.is_empty() {
-                            eprintln!("Not renaming directory as only movie was skipped.");
-                            continue;
-                        }
 
-                        if entry_clean == movie_name {
-                            println!("[directory] '{entry_clean}' already has correct name.");
-                        } else {
-                            println!("[directory] '{entry_clean}' -> '{movie_name}'");
-                            if !settings["dry_run"] {
-                                if !Path::new(movie_name.as_str()).is_dir() {
-                                    fs::rename(entry, movie_name)
-                                        .expect("Unable to rename directory!");
+                        // If the file was ignored, exit
+                        match movie_name {
+                            None => {
+                                eprintln!("Not renaming directory as only movie was skipped.");
+                            }
+
+                            Some(name) => {
+                                if entry_clean == name {
+                                    println!(
+                                        "[directory] '{entry_clean}' already has correct name."
+                                    );
                                 } else {
-                                    eprintln!("Destination directory already exists, skipping...");
+                                    println!("[directory] '{entry_clean}' -> '{name}'",);
+                                    if !settings["dry_run"] {
+                                        if !Path::new(name.as_str()).is_dir() {
+                                            fs::rename(entry, name)
+                                                .expect("Unable to rename directory!");
+                                        } else {
+                                            eprintln!(
+                                                "Destination directory already exists, skipping..."
+                                            );
+                                        }
+                                    }
                                 }
                             }
                         }

@@ -5,8 +5,8 @@ use tmdb_api::movie::MovieShort;
 pub struct MovieEntry {
     pub title: String,
     pub id: u64,
-    pub director: String,
-    pub year: String,
+    pub director: Option<String>,
+    pub year: Option<String>,
     pub language: String,
 }
 
@@ -16,39 +16,38 @@ impl MovieEntry {
         MovieEntry {
             title: movie.inner.title,
             id: movie.inner.id,
-            director: String::from("N/A"),
-            year: match movie.inner.release_date {
-                Some(date) => date.format("%Y").to_string(),
-                _ => String::from("N/A"),
-            },
+            director: None,
+            year: movie
+                .inner
+                .release_date
+                .map(|date| date.format("%Y").to_string()),
             language: get_long_lang(movie.inner.original_language.as_str()),
         }
     }
 
     // Generate desired filename from movie entry
     pub fn rename_format(&self, mut format: String) -> String {
-        const PATTERN: &str = "^~#%$*+={}?@'`/\\\"><|:&!";
         // Try to sanitize the title to avoid some characters
         let mut title = self.title.clone();
-        title.retain(|c| !PATTERN.contains(c));
+        title = sanitize(title);
         title.truncate(159);
         format = format.replace("{title}", title.as_str());
 
-        if self.year != "N/A" {
-            format = format.replace("{year}", self.year.as_str());
-        } else {
-            format = format.replace("{year}", "");
-        }
+        format = match &self.year {
+            Some(year) => format.replace("{year}", year.as_str()),
+            None => format.replace("{year}", ""),
+        };
 
-        if self.director.as_str() != "N/A" {
-            // Try to sanitize the director's name to avoid some characters
-            let mut director = self.director.clone();
-            director.retain(|c| !PATTERN.contains(c));
-            director.truncate(63);
-            format = format.replace("{director}", director.as_str());
-        } else {
-            format = format.replace("{director}", "");
-        }
+        format = match &self.director {
+            Some(name) => {
+                // Try to sanitize the director's name to avoid some characters
+                let mut director = name.clone();
+                director = sanitize(director);
+                director.truncate(63);
+                format.replace("{director}", director.as_str())
+            }
+            None => format.replace("{director}", ""),
+        };
 
         // Try to clean extra spaces and such
         format = format.trim_matches(|c| "- ".contains(c)).to_string();
@@ -65,12 +64,12 @@ impl fmt::Display for MovieEntry {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut buffer = String::new();
         buffer.push_str(&format!("{} ", self.title));
-        buffer.push_str(&format!("({}), ", self.year));
+        buffer.push_str(&format!("({:?}), ", self.year));
         buffer.push_str(&format!(
             "Language: {}, ",
             get_long_lang(self.language.as_str())
         ));
-        buffer.push_str(&format!("Directed by: {}, ", self.director));
+        buffer.push_str(&format!("Directed by: {:?}, ", self.director));
         buffer.push_str(&format!("TMDB ID: {}", self.id));
         // buffer.push_str(&format!("Synopsis: {}", self.overview));
         write!(f, "{buffer}")
@@ -117,4 +116,16 @@ pub fn get_long_lang(short: &str) -> String {
         other => other,
     };
     String::from(long)
+}
+
+// Sanitize filename so that there are no errors while
+// creating a file/directory
+fn sanitize(input: String) -> String {
+    const AVOID: &str = "^~*+=`/\\\"><|";
+
+    let mut out = input;
+    out.retain(|c| !AVOID.contains(c));
+    out = out.replace(':', "∶");
+    out = out.replace('?', "﹖");
+    out
 }

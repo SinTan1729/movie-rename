@@ -21,9 +21,11 @@ pub async fn process_file(
     tmdb: &Client,
     pattern: &str,
     dry_run: bool,
-    movie_list: Option<&HashMap<String, String>>,
-) -> (String, String, bool) {
+    movie_list: Option<&HashMap<String, Option<String>>>,
     // The last bool tells whether the entry should be added to the movie_list or not
+    // The first String is filename without extension, and the second String is
+    // new basename, if any.
+) -> (String, Option<String>, bool) {
     // Set RenderConfig for the menu items
     inquire::set_global_render_config(get_render_config());
 
@@ -53,7 +55,7 @@ pub async fn process_file(
         Some(list) => {
             if list.contains_key(&filename_without_ext) {
                 preprocessed = true;
-                list[&filename_without_ext].clone()
+                list[&filename_without_ext].clone().unwrap_or_default()
             } else {
                 String::new()
             }
@@ -63,7 +65,7 @@ pub async fn process_file(
     // Check if it should be ignored
     if preprocessed && new_name_base.is_empty() {
         eprintln!("  Ignoring {file_base} as per previous choice for related files...");
-        return (filename_without_ext, String::new(), false);
+        return (filename_without_ext, None, false);
     }
 
     // Parse the filename for metadata
@@ -75,7 +77,7 @@ pub async fn process_file(
         println!("  Processing {file_base}...");
     } else {
         println!("  Ignoring {file_base}...");
-        return (filename_without_ext, String::new(), false);
+        return (filename_without_ext, None, false);
     }
 
     // Only do the TMDb API stuff if it's not preprocessed
@@ -113,7 +115,7 @@ pub async fn process_file(
                             if let Some(pos) = directors_text.rfind(',') {
                                 directors_text.replace_range(pos..pos + 2, " and ");
                             }
-                            movie_details.director = directors_text;
+                            movie_details.director = Some(directors_text);
                         }
                     }
                 }
@@ -124,7 +126,7 @@ pub async fn process_file(
         // If nothing is found, skip
         if movie_list.is_empty() {
             eprintln!("  Could not find any entries matching {file_base}!");
-            return (filename_without_ext, String::new(), true);
+            return (filename_without_ext, None, true);
         }
 
         // Choose from the possible entries
@@ -141,7 +143,7 @@ pub async fn process_file(
                     error,
                     InquireError::OperationCanceled | InquireError::OperationInterrupted
                 );
-                return (filename_without_ext, String::new(), flag);
+                return (filename_without_ext, None, flag);
             }
         };
 
@@ -196,7 +198,7 @@ pub async fn process_file(
             }
         }
     }
-    (filename_without_ext, new_name_base, true)
+    (filename_without_ext, Some(new_name_base), true)
 }
 
 // Function to process the passed arguments
