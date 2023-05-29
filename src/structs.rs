@@ -64,12 +64,21 @@ impl fmt::Display for MovieEntry {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut buffer = String::new();
         buffer.push_str(&format!("{} ", self.title));
-        buffer.push_str(&format!("({:?}), ", self.year));
+
+        if self.year.is_some() {
+            buffer.push_str(&format!("({}), ", self.year.as_ref().unwrap()));
+        }
         buffer.push_str(&format!(
             "Language: {}, ",
             get_long_lang(self.language.as_str())
         ));
-        buffer.push_str(&format!("Directed by: {:?}, ", self.director));
+
+        if self.director.is_some() {
+            buffer.push_str(&format!(
+                "Directed by: {}, ",
+                self.director.as_ref().unwrap()
+            ));
+        }
         buffer.push_str(&format!("TMDB ID: {}", self.id));
         // buffer.push_str(&format!("Synopsis: {}", self.overview));
         write!(f, "{buffer}")
@@ -112,6 +121,7 @@ pub fn get_long_lang(short: &str) -> String {
         "ja" => "Japanese",
         "de" => "German",
         "sp" => "Spanish",
+        "fa" => "Persian",
         "none" => "None",
         other => other,
     };
