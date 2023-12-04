@@ -48,7 +48,15 @@ async fn main() {
             false => {
                 if Path::new(entry.as_str()).is_file() {
                     // Process the filename for movie entries
-                    process_file(&entry, &tmdb, pattern, settings["dry_run"], None).await;
+                    process_file(
+                        &entry,
+                        &tmdb,
+                        pattern,
+                        settings["dry_run"],
+                        settings["lucky"],
+                        None,
+                    )
+                    .await;
                 } else {
                     eprintln!("The file {entry} wasn't found on disk, skipping...");
                     continue;
@@ -70,6 +78,7 @@ async fn main() {
                                         &tmdb,
                                         pattern,
                                         settings["dry_run"],
+                                        settings["lucky"],
                                         Some(&movie_list),
                                     )
                                     .await;

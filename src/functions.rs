@@ -21,6 +21,7 @@ pub async fn process_file(
     tmdb: &Client,
     pattern: &str,
     dry_run: bool,
+    lucky: bool,
     movie_list: Option<&HashMap<String, Option<String>>>,
     // The last bool tells whether the entry should be added to the movie_list or not
     // The first String is filename without extension, and the second String is
@@ -129,22 +130,28 @@ pub async fn process_file(
             return (filename_without_ext, None, true);
         }
 
-        // Choose from the possible entries
-        let choice = match Select::new(
-            format!("  Possible choices for {file_base}:").as_str(),
-            movie_list,
-        )
-        .prompt()
-        {
-            Ok(movie) => movie,
-            Err(error) => {
-                println!("  {error}");
-                let flag = matches!(
-                    error,
-                    InquireError::OperationCanceled | InquireError::OperationInterrupted
-                );
-                return (filename_without_ext, None, flag);
-            }
+        let choice;
+        if lucky {
+            // Take first choice if in lucky mode
+            choice = movie_list.into_iter().next().unwrap();
+        } else {
+            // Choose from the possible entries
+            choice = match Select::new(
+                format!("  Possible choices for {file_base}:").as_str(),
+                movie_list,
+            )
+            .prompt()
+            {
+                Ok(movie) => movie,
+                Err(error) => {
+                    println!("  {error}");
+                    let flag = matches!(
+                        error,
+                        InquireError::OperationCanceled | InquireError::OperationInterrupted
+                    );
+                    return (filename_without_ext, None, flag);
+                }
+            };
         };
 
         // Create the new name
@@ -206,13 +213,13 @@ pub fn process_args(mut args: Vec<String>) -> (Vec<String>, HashMap<&'static str
     // Remove the entry corresponding to the running process
     args.remove(0);
     let mut entries = Vec::new();
-    let mut settings = HashMap::from([("dry_run", false), ("directory", false)]);
+    let mut settings = HashMap::from([("dry_run", false), ("directory", false), ("lucky", false)]);
     for arg in args {
         match arg.as_str() {
             "--help" | "-h" => {
                 println!("  The expected syntax is:");
                 println!(
-                    "  movie-rename <filename(s)> [-n|--dry-run] [-d|--directory] [-v|--version]"
+                    "  movie-rename <filename(s)> [-n|--dry-run] [-d|--directory] [-l|--i-feel-lucky] [-v|--version]"
                 );
                 println!(
                 "  There needs to be a config file named config in the $XDG_CONFIG_HOME/movie-rename/ directory."
@@ -239,6 +246,10 @@ pub fn process_args(mut args: Vec<String>) -> (Vec<String>, HashMap<&'static str
             "--dry-run" | "-n" => {
                 println!("Doing a dry run...");
                 settings.entry("dry_run").and_modify(|x| *x = true);
+            }
+            "--i-feel-lucky" | "-l" => {
+                println!("Choosing the first option automatically...");
+                settings.entry("lucky").and_modify(|x| *x = true);
             }
             "--directory" | "-d" => {
                 println!("Running in directory mode...");
