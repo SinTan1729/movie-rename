@@ -234,7 +234,9 @@ pub fn process_args(mut args: Vec<String>) -> (Vec<String>, HashMap<&'static str
                 );
                 println!("  Passing --directory or -d assumes that the arguments are directory names, which contain exactly one movie and optionally subtitles.");
                 println!("  Passing --dry-run or -n does a dry tun and only prints out the new names, without actually doing anything.");
-                println!("  Passing -nd or -dn does a dry run in directory mode.");
+                println!(
+                    "  You can join the short flags -d, -n and -l together (e.g. -dn or -dln)."
+                );
                 println!("  Passing --version or -v shows version and exits.");
                 println!("  Pass --help to get this again.");
                 exit(0);
@@ -243,27 +245,38 @@ pub fn process_args(mut args: Vec<String>) -> (Vec<String>, HashMap<&'static str
                 println!("movie-rename {VERSION}");
                 exit(0);
             }
-            "--dry-run" | "-n" => {
+            "--dry-run" => {
                 println!("Doing a dry run...");
                 settings.entry("dry_run").and_modify(|x| *x = true);
             }
-            "--i-feel-lucky" | "-l" => {
+            "--i-feel-lucky" => {
                 println!("Choosing the first option automatically...");
                 settings.entry("lucky").and_modify(|x| *x = true);
             }
-            "--directory" | "-d" => {
+            "--directory" => {
                 println!("Running in directory mode...");
-                settings.entry("directory").and_modify(|x| *x = true);
-            }
-            "-nd" | "-dn" => {
-                println!("Doing a dry run in directory mode...");
-                settings.entry("dry_run").and_modify(|x| *x = true);
                 settings.entry("directory").and_modify(|x| *x = true);
             }
             other => {
                 if other.starts_with('-') {
-                    eprintln!("Unknown argument passed: {other}");
-                    exit(1);
+                    if !other.starts_with("--") && other.len() < 5 {
+                        // Process short args
+                        if other.contains('l') {
+                            println!("Choosing the first option automatically...");
+                            settings.entry("lucky").and_modify(|x| *x = true);
+                        }
+                        if other.contains('d') {
+                            println!("Running in directory mode...");
+                            settings.entry("directory").and_modify(|x| *x = true);
+                        }
+                        if other.contains('n') {
+                            println!("Doing a dry run...");
+                            settings.entry("dry_run").and_modify(|x| *x = true);
+                        }
+                    } else {
+                        eprintln!("Unknown argument passed: {other}");
+                        exit(1);
+                    }
                 } else {
                     entries.push(arg);
                 }

@@ -31,7 +31,7 @@ sudo make install
 - Passing `--directory` or `-d` assumes that the arguments are directory names, which contain exactly one movie and optionally subtitles.
 - Passing `--dry-run` or `-n` does a dry tun and only prints out the new names, without actually doing anything.
 - Passing `--i-feel-lucky` or `-l` automatically chooses the first option. Useful when you use the program as part of a script.
-- Passing `-nd` or `-dn` does a dry run in directory mode.
+- You can join the short flags `-d`, `-n` and `-l` together (e.g. `-dn` or `-dln`).
 - Passing `--help` or `-h` shows help and exits.
 - Passing `--version` or `-v` shows version and exits.
 
