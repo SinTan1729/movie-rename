@@ -4,13 +4,14 @@ use tmdb_api::Client;
 
 // Import all the modules
 mod functions;
-use functions::{process_args, process_file};
+use functions::process_file;
+mod args;
 mod structs;
 
 #[tokio::main]
 async fn main() {
     // Process the passed arguments
-    let (entries, settings) = process_args();
+    let (entries, settings) = args::process_args();
     let flag_dry_run = settings["dry-run"];
     let flag_directory = settings["directory"];
     let flag_lucky = settings["i-feel-lucky"];

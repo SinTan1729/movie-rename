@@ -1,4 +1,3 @@
-use clap::{arg, command, ArgAction};
 use inquire::{
     ui::{Color, IndexPrefix, RenderConfig, Styled},
     InquireError, Select,
@@ -204,45 +203,6 @@ pub async fn process_file(
         }
     }
     (filename_without_ext, Some(new_name_base), true)
-}
-
-// Function to process the passed arguments
-pub fn process_args() -> (Vec<String>, HashMap<String, bool>) {
-    let matches = command!()
-        .name("movie-rename")
-        .author("Sayantan Santra <sayantan.santra@gmail.com>")
-        .about("A simple tool to rename movies, written in Rust.")
-        .arg(arg!(-d --directory "Run in directory mode").action(ArgAction::SetTrue))
-        .arg(arg!(-n --"dry-run" "Do a dry run").action(ArgAction::SetTrue))
-        .arg(arg!(-l --"i-feel-lucky" "Always choose the first option").action(ArgAction::SetTrue))
-        .arg(
-            arg!([entries] "The files/directories to be processed")
-                .trailing_var_arg(true)
-                .num_args(1..)
-                .required(true),
-        )
-        // Use -v instead of -V for version
-        .disable_version_flag(true)
-        .arg(arg!(-v --version "Print version").action(ArgAction::Version))
-        .arg_required_else_help(true)
-        .get_matches();
-
-    // Generate the settings HashMap from read flags
-    let mut settings = HashMap::new();
-    for id in matches.ids().map(|x| x.as_str()) {
-        if id != "entries" {
-            settings.insert(id.to_string(), matches.get_flag(id));
-        }
-    }
-
-    // Every unmatched argument should be treated as a file entry
-    let entries: Vec<String> = matches
-        .get_many::<String>("entries")
-        .expect("No entries provided!")
-        .cloned()
-        .collect();
-
-    (entries, settings)
 }
 
 // RenderConfig for the menu items
