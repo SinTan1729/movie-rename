@@ -11,9 +11,9 @@ mod structs;
 async fn main() {
     // Process the passed arguments
     let (entries, settings) = process_args();
-    let flag_dry_run = *settings.get("dry-run").unwrap_or(&false);
-    let flag_directory = *settings.get("directory").unwrap_or(&false);
-    let flag_lucky = *settings.get("i-feel-lucky").unwrap_or(&false);
+    let flag_dry_run = settings["dry-run"];
+    let flag_directory = settings["directory"];
+    let flag_lucky = settings["i-feel-lucky"];
 
     // Try to read config file, or display error
     let mut config_file = env::var("XDG_CONFIG_HOME").unwrap_or(String::from("$HOME"));
