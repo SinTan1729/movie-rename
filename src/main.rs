@@ -9,11 +9,11 @@ mod structs;
 
 #[tokio::main]
 async fn main() {
-    // Read arguments from commandline
-    let args: Vec<String> = env::args().collect();
-
     // Process the passed arguments
-    let (entries, settings) = process_args(args);
+    let (entries, settings) = process_args();
+    let flag_dry_run = *settings.get("dry-run").unwrap_or(&false);
+    let flag_directory = *settings.get("directory").unwrap_or(&false);
+    let flag_lucky = *settings.get("i-feel-lucky").unwrap_or(&false);
 
     // Try to read config file, or display error
     let mut config_file = env::var("XDG_CONFIG_HOME").unwrap_or(String::from("$HOME"));
@@ -43,20 +43,12 @@ async fn main() {
     // Iterate over entries
     for entry in entries {
         // Check if the file/directory exists on disk and run necessary commands
-        match settings["directory"] {
+        match flag_directory {
             // Normal file
             false => {
                 if Path::new(entry.as_str()).is_file() {
                     // Process the filename for movie entries
-                    process_file(
-                        &entry,
-                        &tmdb,
-                        pattern,
-                        settings["dry_run"],
-                        settings["lucky"],
-                        None,
-                    )
-                    .await;
+                    process_file(&entry, &tmdb, pattern, flag_dry_run, flag_lucky, None).await;
                 } else {
                     eprintln!("The file {entry} wasn't found on disk, skipping...");
                     continue;
@@ -77,8 +69,8 @@ async fn main() {
                                         &filename,
                                         &tmdb,
                                         pattern,
-                                        settings["dry_run"],
-                                        settings["lucky"],
+                                        flag_dry_run,
+                                        flag_lucky,
                                         Some(&movie_list),
                                     )
                                     .await;
@@ -109,7 +101,7 @@ async fn main() {
                                     );
                                 } else {
                                     println!("[directory] '{entry_clean}' -> '{name}'",);
-                                    if !settings["dry_run"] {
+                                    if !flag_dry_run {
                                         if !Path::new(name.as_str()).is_dir() {
                                             fs::rename(entry, name)
                                                 .expect("Unable to rename directory!");

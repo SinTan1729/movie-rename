@@ -1,8 +1,9 @@
+use clap::{arg, command, ArgAction};
 use inquire::{
     ui::{Color, IndexPrefix, RenderConfig, Styled},
     InquireError, Select,
 };
-use std::{collections::HashMap, fs, path::Path, process::exit};
+use std::{collections::HashMap, fs, path::Path};
 use tmdb_api::{
     movie::{credits::MovieCredits, search::MovieSearch},
     prelude::Command,
@@ -11,9 +12,6 @@ use tmdb_api::{
 use torrent_name_parser::Metadata;
 
 use crate::structs::{get_long_lang, Language, MovieEntry};
-
-// Get the version from Cargo.toml
-const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 // Function to process movie entries
 pub async fn process_file(
@@ -209,80 +207,41 @@ pub async fn process_file(
 }
 
 // Function to process the passed arguments
-pub fn process_args(mut args: Vec<String>) -> (Vec<String>, HashMap<&'static str, bool>) {
-    // Remove the entry corresponding to the running process
-    args.remove(0);
-    let mut entries = Vec::new();
-    let mut settings = HashMap::from([("dry_run", false), ("directory", false), ("lucky", false)]);
-    for arg in args {
-        match arg.as_str() {
-            "--help" | "-h" => {
-                println!("  The expected syntax is:");
-                println!(
-                    "  movie-rename <filename(s)> [-n|--dry-run] [-d|--directory] [-l|--i-feel-lucky] [-v|--version]"
-                );
-                println!(
-                "  There needs to be a config file named config in the $XDG_CONFIG_HOME/movie-rename/ directory."
-                );
-                println!("  It should consist of two lines. The first line should have your TMDb API key.");
-                println!(
-                    "  The second line should have a pattern, that will be used for the rename."
-                );
-                println!("  In the pattern, the variables need to be enclosed in {{}}, the supported variables are `title`, `year` and `director`.");
-                println!(
-                "  Default pattern is `{{title}} ({{year}}) - {{director}}`. Extension is always kept."
-                );
-                println!("  Passing --directory or -d assumes that the arguments are directory names, which contain exactly one movie and optionally subtitles.");
-                println!("  Passing --dry-run or -n does a dry tun and only prints out the new names, without actually doing anything.");
-                println!(
-                    "  You can join the short flags -d, -n and -l together (e.g. -dn or -dln)."
-                );
-                println!("  Passing --version or -v shows version and exits.");
-                println!("  Pass --help to get this again.");
-                exit(0);
-            }
-            "--version" | "-v" => {
-                println!("movie-rename {VERSION}");
-                exit(0);
-            }
-            "--dry-run" => {
-                println!("Doing a dry run...");
-                settings.entry("dry_run").and_modify(|x| *x = true);
-            }
-            "--i-feel-lucky" => {
-                println!("Choosing the first option automatically...");
-                settings.entry("lucky").and_modify(|x| *x = true);
-            }
-            "--directory" => {
-                println!("Running in directory mode...");
-                settings.entry("directory").and_modify(|x| *x = true);
-            }
-            other => {
-                if other.starts_with('-') {
-                    if !other.starts_with("--") && other.len() < 5 {
-                        // Process short args
-                        if other.contains('l') {
-                            println!("Choosing the first option automatically...");
-                            settings.entry("lucky").and_modify(|x| *x = true);
-                        }
-                        if other.contains('d') {
-                            println!("Running in directory mode...");
-                            settings.entry("directory").and_modify(|x| *x = true);
-                        }
-                        if other.contains('n') {
-                            println!("Doing a dry run...");
-                            settings.entry("dry_run").and_modify(|x| *x = true);
-                        }
-                    } else {
-                        eprintln!("Unknown argument passed: {other}");
-                        exit(1);
-                    }
-                } else {
-                    entries.push(arg);
-                }
-            }
+pub fn process_args() -> (Vec<String>, HashMap<String, bool>) {
+    let matches = command!()
+        .name("movie-rename")
+        .author("Sayantan Santra <sayantan.santra@gmail.com>")
+        .about("A simple tool to rename movies, written in Rust.")
+        .arg(arg!(-d --directory "Run in directory mode").action(ArgAction::SetTrue))
+        .arg(arg!(-n --"dry-run" "Do a dry run").action(ArgAction::SetTrue))
+        .arg(arg!(-l --"i-feel-lucky" "Always choose the first option").action(ArgAction::SetTrue))
+        .arg(
+            arg!([entries] "The files/directories to be processed")
+                .trailing_var_arg(true)
+                .num_args(1..)
+                .required(true),
+        )
+        // Use -v instead of -V for version
+        .disable_version_flag(true)
+        .arg(arg!(-v --version "Print version").action(ArgAction::Version))
+        .arg_required_else_help(true)
+        .get_matches();
+
+    // Generate the settings HashMap from read flags
+    let mut settings = HashMap::new();
+    for id in matches.ids().map(|x| x.as_str()) {
+        if id != "entries" {
+            settings.insert(id.to_string(), matches.get_flag(id));
         }
     }
+
+    // Every unmatched argument should be treated as a file entry
+    let entries: Vec<String> = matches
+        .get_many::<String>("entries")
+        .expect("No entries provided!")
+        .cloned()
+        .collect();
+
     (entries, settings)
 }
 

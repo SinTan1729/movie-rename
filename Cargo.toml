@@ -20,6 +20,7 @@ tmdb-api = "0.5.0"
 inquire = "0.6.2"
 load_file = "1.0.1"
 tokio = { version = "1.32.0", features = ["macros", "rt-multi-thread"] }
+clap = { version = "4.5.1", features = ["cargo"] }
 
 [profile.release]
 strip = true
