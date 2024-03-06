@@ -556,7 +556,7 @@ dependencies = [
 
 [[package]]
 name = "movie-rename"
-version = "2.2.2"
+version = "2.3.0"
 dependencies = [
  "clap",
  "clap_complete",
