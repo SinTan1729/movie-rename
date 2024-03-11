@@ -16,6 +16,17 @@ async fn main() {
     let flag_directory = settings["directory"];
     let flag_lucky = settings["i-feel-lucky"];
 
+    // Print some message when flags are set.
+    if flag_dry_run {
+        println!("Doing a dry run. No files will be modified.")
+    }
+    if flag_directory {
+        println!("Running in directory mode...")
+    }
+    if flag_lucky {
+        println!("Automatically selecting the first entry...")
+    }
+
     // Try to read config file, or display error
     let mut config_file = env::var("XDG_CONFIG_HOME").unwrap_or(String::from("$HOME"));
     if config_file == "$HOME" {
