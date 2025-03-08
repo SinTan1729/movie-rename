@@ -1,6 +1,6 @@
 use load_file::{self, load_str};
 use std::{collections::HashMap, env, fs, path::Path, process::exit};
-use tmdb_api::Client;
+use tmdb_api::client::{reqwest::ReqwestExecutor, Client};
 
 // Import all the modules
 mod functions;
@@ -50,7 +50,7 @@ async fn main() {
     }
 
     // Create TMDb object for API calls
-    let tmdb = Client::new(String::from(api_key));
+    let tmdb = Client::<ReqwestExecutor>::new(String::from(api_key));
 
     // Iterate over entries
     for entry in entries {

@@ -4,9 +4,9 @@ use inquire::{
 };
 use std::{collections::HashMap, fs, path::Path};
 use tmdb_api::{
+    client::{reqwest::ReqwestExecutor, Client},
     movie::{credits::MovieCredits, search::MovieSearch},
     prelude::Command,
-    Client,
 };
 use torrent_name_parser::Metadata;
 
@@ -15,7 +15,7 @@ use crate::structs::{get_long_lang, Language, MovieEntry};
 // Function to process movie entries
 pub async fn process_file(
     filename: &String,
-    tmdb: &Client,
+    tmdb: &Client<ReqwestExecutor>,
     pattern: &str,
     dry_run: bool,
     lucky: bool,
@@ -206,7 +206,7 @@ pub async fn process_file(
 }
 
 // RenderConfig for the menu items
-fn get_render_config() -> RenderConfig {
+fn get_render_config() -> RenderConfig<'static> {
     let mut render_config = RenderConfig::default();
     render_config.option_index_prefix = IndexPrefix::Simple;
 
