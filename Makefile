@@ -2,7 +2,7 @@ PREFIX := /usr/local
 PKGNAME := movie-rename
 
 build:
-	cargo build --release
+	cargo zigbuild --release --target x86_64-unknown-linux-gnu.2.34
 
 build-debug:
 	cargo build
@@ -19,6 +19,6 @@ uninstall:
 	rm -f "$(DESTDIR)$(PREFIX)/man/man1/$(PKGNAME).1"
 
 aur: build
-	tar --transform 's/.*\///g' -czf $(PKGNAME).tar.gz target/release/$(PKGNAME) target/autocomplete/* $(PKGNAME).1
+	tar --transform 's/.*\///g' -czf $(PKGNAME).tar.gz target/x86_64-unknown-linux-gnu/release/$(PKGNAME) target/autocomplete/* $(PKGNAME).1
 
 .PHONY: build build-debug install clean uninstall aur
