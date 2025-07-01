@@ -166,6 +166,8 @@ pub async fn process_file(
                 get_long_lang(filename_parts[1])
             );
             extension = format!("{}.{}", filename_parts[1], extension);
+        } else if lucky {
+            extension = String::from("en");
         } else {
             let lang_list = Language::generate_list();
             let lang_choice =
