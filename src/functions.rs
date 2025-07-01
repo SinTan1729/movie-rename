@@ -127,13 +127,12 @@ pub async fn process_file(
             return (filename_without_ext, None, true);
         }
 
-        let choice;
-        if lucky {
+        let choice = if lucky {
             // Take first choice if in lucky mode
-            choice = movie_list.into_iter().next().unwrap();
+            movie_list.into_iter().next().unwrap()
         } else {
             // Choose from the possible entries
-            choice = match Select::new(
+            match Select::new(
                 format!("  Possible choices for {file_base}:").as_str(),
                 movie_list,
             )
@@ -148,7 +147,7 @@ pub async fn process_file(
                     );
                     return (filename_without_ext, None, flag);
                 }
-            };
+            }
         };
 
         // Create the new name
