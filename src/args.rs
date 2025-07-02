@@ -22,7 +22,7 @@ pub fn get_command() -> Command {
         .arg(arg!(-v --version "Print version").action(ArgAction::Version))
         .arg_required_else_help(true)
         .help_template(
-            "{before-help}{name} {version}\n{about}\nMIT (c) {author}
+            "{before-help}{name} {version}\n{about}\nGPLv3 (c) {author}
                 \n{usage-heading}\n{usage}\n\n{all-args}{after-help}",
         )
 }
