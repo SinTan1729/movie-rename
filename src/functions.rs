@@ -203,7 +203,7 @@ pub async fn process_file(
             }
         }
     }
-    (filename_without_ext, Some(new_name_base), true)
+    (filename_without_ext, Some(new_name_base), !preprocessed)
 }
 
 // RenderConfig for the menu items
