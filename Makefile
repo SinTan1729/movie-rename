@@ -2,7 +2,7 @@ PREFIX := /usr/local
 PKGNAME := movie-rename
 
 build:
-	cargo zigbuild --release --target x86_64-unknown-linux-gnu.2.34
+	cargo build --release --target x86_64-unknown-linux-musl
 
 build-debug:
 	cargo build
@@ -29,6 +29,6 @@ endif
 endif
 
 aur: build tag
-	tar --transform 's/.*\///g' -czf $(PKGNAME).tar.gz target/x86_64-unknown-linux-gnu/release/$(PKGNAME) target/autocomplete/* $(PKGNAME).1
+	tar --transform 's/.*\///g' -czf $(PKGNAME).tar.gz target/x86_64-unknown-linux-musl/release/$(PKGNAME) target/autocomplete/* $(PKGNAME).1
 
 .PHONY: build build-debug install clean uninstall aur tag
