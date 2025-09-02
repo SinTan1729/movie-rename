@@ -73,12 +73,15 @@ async fn main() {
                     let mut movie_list = HashMap::new();
 
                     if let Ok(files_in_dir) = fs::read_dir(entry.as_str()) {
+                        let mut file_list = Vec::new();
                         for file in files_in_dir {
                             if file.is_ok() {
-                                let filename = file.unwrap().path().display().to_string();
+                                file_list.push(file.unwrap().path().display().to_string());
+                            }
+                            for filename in file_list.iter() {
                                 let (filename_without_ext, movie_name_temp, add_to_list) =
                                     process_file(
-                                        &filename,
+                                        filename,
                                         &tmdb,
                                         pattern,
                                         flag_dry_run,
