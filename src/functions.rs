@@ -69,7 +69,12 @@ pub async fn process_file(
     }
 
     // Parse the filename for metadata
-    let metadata = Metadata::from(file_base.as_str()).expect("  Could not parse filename!");
+    let metadata = if let Ok(meta) = Metadata::from(file_base.as_str()) {
+        meta
+    } else {
+        println!("  Could not parse filename for {file_base}...");
+        return (filename_without_ext, None, false);
+    };
 
     // Process only if it's a valid file format
     let mut extension = metadata.extension().unwrap_or("").to_string();
