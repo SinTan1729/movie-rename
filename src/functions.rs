@@ -41,8 +41,10 @@ pub async fn process_file(
     let filename_parts: Vec<&str> = filename.rsplit('.').collect();
     let filename_without_ext = if filename_parts.len() >= 3 && filename_parts[1].len() == 2 {
         filename.rsplitn(3, '.').last().unwrap().to_string()
+    } else if let Some(name) = filename.rsplit_once('.') {
+        name.0.to_string()
     } else {
-        filename.rsplit_once('.').unwrap().0.to_string()
+        filename.to_string()
     };
 
     // Check if the filename (without extension) has already been processed
@@ -85,7 +87,7 @@ pub async fn process_file(
         let search = MovieSearch::new(metadata.title().to_string()).with_year(year);
         let reply = search.execute(tmdb).await;
 
-        let results = match reply {
+        let results_reply = match reply {
             Ok(res) => Ok(res.results),
             Err(e) => {
                 eprintln!("  There was an error while searching {file_base}!");
@@ -95,15 +97,15 @@ pub async fn process_file(
 
         let mut movie_list: Vec<MovieEntry> = Vec::new();
         // Create movie entry from the result
-        if results.is_ok() {
-            for result in results.unwrap() {
+        if let Ok(results) = results_reply {
+            for result in results {
                 let mut movie_details = MovieEntry::from(result);
                 // Get director's name, if needed
                 if pattern.contains("{director}") {
                     let credits_search = MovieCredits::new(movie_details.id);
                     let credits_reply = credits_search.execute(tmdb).await;
-                    if credits_reply.is_ok() {
-                        let mut crew = credits_reply.unwrap().crew;
+                    if let Ok(credits) = credits_reply {
+                        let mut crew = credits.crew;
                         // Only keep the director(s)
                         crew.retain(|x| x.job == *"Director");
                         if !crew.is_empty() {
