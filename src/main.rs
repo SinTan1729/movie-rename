@@ -73,26 +73,24 @@ async fn main() {
                     let mut movie_list = HashMap::new();
 
                     if let Ok(files_in_dir) = fs::read_dir(entry.as_str()) {
-                        let mut file_list = Vec::new();
-                        for file in files_in_dir {
-                            if file.is_ok() {
-                                file_list.push(file.unwrap().path().display().to_string());
-                            }
-                            for filename in file_list.iter() {
-                                let (filename_without_ext, movie_name_temp, add_to_list) =
-                                    process_file(
-                                        filename,
-                                        &tmdb,
-                                        pattern,
-                                        flag_dry_run,
-                                        flag_lucky,
-                                        Some(&movie_list),
-                                    )
-                                    .await;
+                        let filename_list: Vec<_> = files_in_dir
+                            .filter(|f| f.is_ok())
+                            .map(|f| f.unwrap().path().display().to_string())
+                            .collect();
+                        for filename in filename_list {
+                            let (filename_without_ext, movie_name_temp, add_to_list) =
+                                process_file(
+                                    &filename,
+                                    &tmdb,
+                                    pattern,
+                                    flag_dry_run,
+                                    flag_lucky,
+                                    Some(&movie_list),
+                                )
+                                .await;
 
-                                if add_to_list {
-                                    movie_list.insert(filename_without_ext, movie_name_temp);
-                                }
+                            if add_to_list {
+                                movie_list.insert(filename_without_ext, movie_name_temp);
                             }
                         }
                     } else {
