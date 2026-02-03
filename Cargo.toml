@@ -18,7 +18,7 @@ categories = ["command-line-utilities"]
 [dependencies]
 torrent-name-parser = "0.12.1"
 tmdb-api = "0.9.1"
-inquire = "0.7.5"
+inquire = "0.9.2"
 load_file = "1.0.1"
 tokio = { version = "1.32.0", features = ["macros", "rt-multi-thread"] }
 clap = { version = "4.5.1", features = ["cargo"] }
