@@ -28,7 +28,7 @@ ifeq (${bumped}, 1)
 endif
 endif
 
-aur: build tag
+aur: build
 	tar --transform 's/.*\///g' -czf $(PKGNAME).tar.gz target/x86_64-unknown-linux-musl/release/$(PKGNAME) target/autocomplete/* $(PKGNAME).1
 
 .PHONY: build build-debug install clean uninstall aur tag
