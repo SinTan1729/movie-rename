@@ -11,7 +11,7 @@ mod structs;
 #[tokio::main]
 async fn main() {
     // Process the passed arguments
-    let (entries, settings) = args::process_args();
+    let (entries, tmdb_id, settings) = args::process_args();
     let flag_dry_run = settings["dry-run"];
     let flag_directory = settings["directory"];
     let flag_lucky = settings["i-feel-lucky"];
@@ -60,7 +60,16 @@ async fn main() {
             false => {
                 if Path::new(entry.as_str()).is_file() {
                     // Process the filename for movie entries
-                    process_file(&entry, &tmdb, pattern, flag_dry_run, flag_lucky, None).await;
+                    process_file(
+                        &entry,
+                        &tmdb,
+                        tmdb_id,
+                        pattern,
+                        flag_dry_run,
+                        flag_lucky,
+                        None,
+                    )
+                    .await;
                 } else {
                     eprintln!("The file {entry} wasn't found on disk, skipping...");
                     continue;
@@ -82,6 +91,7 @@ async fn main() {
                                 process_file(
                                     &filename,
                                     &tmdb,
+                                    tmdb_id,
                                     pattern,
                                     flag_dry_run,
                                     flag_lucky,

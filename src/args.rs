@@ -1,5 +1,5 @@
 use clap::{arg, command, ArgAction, Command, ValueHint};
-use std::collections::HashMap;
+use std::{collections::HashMap, process::exit};
 
 // Bare command generation function to help with autocompletion
 pub fn get_command() -> Command {
@@ -10,6 +10,7 @@ pub fn get_command() -> Command {
         .arg(arg!(-d --directory "Run in directory mode").action(ArgAction::SetTrue))
         .arg(arg!(-n --"dry-run" "Do a dry run").action(ArgAction::SetTrue))
         .arg(arg!(-l --"i-feel-lucky" "Always choose the first option").action(ArgAction::SetTrue))
+        .arg(arg!(-i --"tmdb-id" <INTEGER> "Use a given TMDB ID. Does not work with directory mode."))
         .arg(
             arg!([entries] "The files/directories to be processed")
                 .trailing_var_arg(true)
@@ -28,15 +29,25 @@ pub fn get_command() -> Command {
 }
 
 // Function to process the passed arguments
-pub fn process_args() -> (Vec<String>, HashMap<String, bool>) {
+pub fn process_args() -> (Vec<String>, Option<u64>, HashMap<String, bool>) {
     let matches = get_command().get_matches();
 
     // Generate the settings HashMap from read flags
     let mut settings = HashMap::new();
     for id in matches.ids().map(|x| x.as_str()) {
-        if id != "entries" {
+        if !["entries", "tmdb-id"].contains(&id) {
             settings.insert(id.to_string(), matches.get_flag(id));
         }
+    }
+
+    let tmdb_id = matches
+        .get_one::<String>("tmdb-id")
+        .and_then(|s| s.parse::<u64>().ok())
+        .filter(|&n| n > 0);
+
+    if tmdb_id.is_some() && settings["directory"] {
+        eprintln!("Directory mode does not support providing TMDB ID.");
+        exit(1);
     }
 
     // Every unmatched argument should be treated as a file entry
@@ -46,5 +57,5 @@ pub fn process_args() -> (Vec<String>, HashMap<String, bool>) {
         .cloned()
         .collect();
 
-    (entries, settings)
+    (entries, tmdb_id, settings)
 }

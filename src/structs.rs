@@ -1,7 +1,13 @@
 use std::fmt;
-use tmdb_api::movie::MovieShort;
+use tmdb_api::{
+    client::reqwest::ReqwestExecutor,
+    movie::{credits::MovieCredits, MovieBase},
+    prelude::Command,
+    Client,
+};
 
 // Struct for movie entries
+#[derive(Clone)]
 pub struct MovieEntry {
     pub title: String,
     pub id: u64,
@@ -12,26 +18,24 @@ pub struct MovieEntry {
 
 impl MovieEntry {
     // Create movie entry from results
-    pub fn from(movie: MovieShort) -> MovieEntry {
+    pub fn from(movie: MovieBase) -> MovieEntry {
         MovieEntry {
-            title: movie.inner.title,
-            id: movie.inner.id,
+            title: movie.title,
+            id: movie.id,
             director: None,
-            year: movie
-                .inner
-                .release_date
-                .map(|date| date.format("%Y").to_string()),
-            language: get_long_lang(movie.inner.original_language.as_str()),
+            year: movie.release_date.map(|date| date.format("%Y").to_string()),
+            language: get_long_lang(movie.original_language.as_str()),
         }
     }
 
     // Generate desired filename from movie entry
-    pub fn rename_format(&self, mut format: String) -> String {
+    pub fn rename_format(&self, format: &str) -> String {
+        let mut format = format.to_string();
         // Try to sanitize the title to avoid some characters
         let mut title = self.title.clone();
         title = sanitize(title);
         title.truncate(159);
-        format = format.replace("{title}", title.as_str());
+        format = format.replace("{title}", &title);
 
         format = match &self.year {
             Some(year) => format.replace("{year}", year.as_str()),
@@ -44,7 +48,7 @@ impl MovieEntry {
                 let mut director = name.clone();
                 director = sanitize(director);
                 director.truncate(63);
-                format.replace("{director}", director.as_str())
+                format.replace("{director}", &director)
             }
             None => format.replace("{director}", ""),
         };
@@ -54,8 +58,30 @@ impl MovieEntry {
         while format.contains("- -") {
             format = format.replace("- -", "-");
         }
-
         format
+    }
+
+    pub async fn maybe_add_director(&self, pattern: &str, tmdb: &Client<ReqwestExecutor>) -> Self {
+        let mut out = self.clone();
+        if pattern.contains("{director}") {
+            let credits_search = MovieCredits::new(out.id);
+            let credits_reply = credits_search.execute(tmdb).await;
+            if let Ok(credits) = credits_reply {
+                let mut crew = credits.crew;
+                // Only keep the director(s)
+                crew.retain(|x| x.job == *"Director");
+                if !crew.is_empty() {
+                    let directors: Vec<String> =
+                        crew.iter().map(|x| x.person.name.clone()).collect();
+                    let mut directors_text = directors.join(", ");
+                    if let Some(pos) = directors_text.rfind(',') {
+                        directors_text.replace_range(pos..pos + 2, " and ");
+                    }
+                    out.director = Some(directors_text);
+                }
+            }
+        }
+        out
     }
 }
 

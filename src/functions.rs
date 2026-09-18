@@ -5,7 +5,7 @@ use inquire::{
 use std::{collections::HashMap, fs, path::Path};
 use tmdb_api::{
     client::{reqwest::ReqwestExecutor, Client},
-    movie::{credits::MovieCredits, search::MovieSearch},
+    movie::{details::MovieDetails, search::MovieSearch},
     prelude::Command,
 };
 use torrent_name_parser::Metadata;
@@ -16,6 +16,7 @@ use crate::structs::{get_long_lang, Language, MovieEntry};
 pub async fn process_file(
     filename: &String,
     tmdb: &Client<ReqwestExecutor>,
+    provided_id: Option<u64>,
     pattern: &str,
     dry_run: bool,
     lucky: bool,
@@ -85,82 +86,81 @@ pub async fn process_file(
         return (filename_without_ext, None, false);
     }
 
-    // Only do the TMDb API stuff if it's not preprocessed
-    if !preprocessed {
-        // Search using the TMDb API
-        let year = metadata.year().map(|y| y as u16);
-        let search = MovieSearch::new(metadata.title().to_string()).with_year(year);
-        let reply = search.execute(tmdb).await;
-
-        let results_reply = match reply {
-            Ok(res) => Ok(res.results),
-            Err(e) => {
+    if let Some(id) = provided_id {
+        println!("  Using provided TMDB ID: {id}");
+        let search = MovieDetails::new(id);
+        match search.execute(tmdb).await {
+            Ok(movie) => {
+                new_name_base = MovieEntry::from(movie.inner)
+                    .maybe_add_director(pattern, tmdb)
+                    .await
+                    .rename_format(pattern);
+            }
+            Err(_) => {
                 eprintln!("  There was an error while searching {file_base}!");
-                Err(e)
             }
         };
+    } else {
+        // Only do the TMDb API stuff if it's not preprocessed
+        if !preprocessed {
+            // Search using the TMDb API
+            let year = metadata.year().map(|y| y as u16);
+            let search = MovieSearch::new(metadata.title().to_string()).with_year(year);
+            let reply = search.execute(tmdb).await;
 
-        let mut movie_list: Vec<MovieEntry> = Vec::new();
-        // Create movie entry from the result
-        if let Ok(results) = results_reply {
-            for result in results {
-                let mut movie_details = MovieEntry::from(result);
-                // Get director's name, if needed
-                if pattern.contains("{director}") {
-                    let credits_search = MovieCredits::new(movie_details.id);
-                    let credits_reply = credits_search.execute(tmdb).await;
-                    if let Ok(credits) = credits_reply {
-                        let mut crew = credits.crew;
-                        // Only keep the director(s)
-                        crew.retain(|x| x.job == *"Director");
-                        if !crew.is_empty() {
-                            let directors: Vec<String> =
-                                crew.iter().map(|x| x.person.name.clone()).collect();
-                            let mut directors_text = directors.join(", ");
-                            if let Some(pos) = directors_text.rfind(',') {
-                                directors_text.replace_range(pos..pos + 2, " and ");
-                            }
-                            movie_details.director = Some(directors_text);
-                        }
+            let results_reply = match reply {
+                Ok(res) => Ok(res.results),
+                Err(e) => {
+                    eprintln!("  There was an error while searching {file_base}!");
+                    Err(e)
+                }
+            };
+
+            let mut movie_list: Vec<MovieEntry> = Vec::new();
+            // Create movie entry from the result
+            if let Ok(results) = results_reply {
+                for result in results {
+                    let movie_details = MovieEntry::from(result.inner)
+                        .maybe_add_director(pattern, tmdb)
+                        .await;
+                    movie_list.push(movie_details);
+                }
+            }
+
+            // If nothing is found, skip
+            if movie_list.is_empty() {
+                eprintln!("  Could not find any entries matching {file_base}!");
+                return (filename_without_ext, None, true);
+            }
+
+            let choice = if lucky {
+                // Take first choice if in lucky mode
+                movie_list.into_iter().next().unwrap()
+            } else {
+                // Choose from the possible entries
+                match Select::new(
+                    format!("  Possible choices for {file_base}:").as_str(),
+                    movie_list,
+                )
+                .prompt()
+                {
+                    Ok(movie) => movie,
+                    Err(error) => {
+                        println!("  {error}");
+                        let flag = matches!(
+                            error,
+                            InquireError::OperationCanceled | InquireError::OperationInterrupted
+                        );
+                        return (filename_without_ext, None, flag);
                     }
                 }
-                movie_list.push(movie_details);
-            }
-        }
+            };
 
-        // If nothing is found, skip
-        if movie_list.is_empty() {
-            eprintln!("  Could not find any entries matching {file_base}!");
-            return (filename_without_ext, None, true);
-        }
-
-        let choice = if lucky {
-            // Take first choice if in lucky mode
-            movie_list.into_iter().next().unwrap()
+            // Create the new name
+            new_name_base = choice.rename_format(pattern);
         } else {
-            // Choose from the possible entries
-            match Select::new(
-                format!("  Possible choices for {file_base}:").as_str(),
-                movie_list,
-            )
-            .prompt()
-            {
-                Ok(movie) => movie,
-                Err(error) => {
-                    println!("  {error}");
-                    let flag = matches!(
-                        error,
-                        InquireError::OperationCanceled | InquireError::OperationInterrupted
-                    );
-                    return (filename_without_ext, None, flag);
-                }
-            }
-        };
-
-        // Create the new name
-        new_name_base = choice.rename_format(String::from(pattern));
-    } else {
-        println!("  Using previous choice for related files...");
+            println!("  Using previous choice for related files...");
+        }
     }
 
     // Handle the case for subtitle files
