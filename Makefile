@@ -19,7 +19,7 @@ uninstall:
 	rm -f "$(DESTDIR)$(PREFIX)/man/man1/$(PKGNAME).1"
 
 conf_tag := $(shell cat Cargo.toml | sed -rn 's/^version = "(.+)"$$/\1/p')
-last_tag := $(shell git tag -l | tail -1)
+last_tag := $(shell git describe --tags --abbrev=0)
 bumped := $(shell git log -1 --pretty=%B | grep "build: Bumped version to " | wc -l)
 tag:
 ifneq (${conf_tag}, ${last_tag})
