@@ -27,22 +27,20 @@ sudo make install
 
 ## Usage
 
-- The syntax is:
+```
+movie-rename [OPTIONS] <entries>...
 
-  `movie-rename <filename(s)> [-n|--dry-run] [-d|--directory] [-h|--help] [-v|--version]`
+Arguments:
+  <entries>...  The files/directories to be processed
 
-- There needs to be a config file named `config` in the `$XDG_CONFIG_HOME/movie-rename/` directory.
-- It should consist of two lines. The first line should have your [TMDB API key](https://developers.themoviedb.org/3/getting-started/authentication).
-- The second line should have a pattern, that will be used for the rename.
-- In the pattern, the variables need to be enclosed in `{}`, the supported variables are `title`, `year` and `director`.
-- Default pattern is `{title} ({year}) - {director}`. Extension is always kept.
-- Passing `--directory` or `-d` assumes that the arguments are directory names, which contain exactly one movie and optionally subtitles.
-- Passing `--dry-run` or `-n` does a dry tun and only prints out the new names, without actually doing anything.
-- Passing `--i-feel-lucky` or `-l` automatically chooses the first option. Useful when you use the program as part of a script.
-- Passing `--tmdb-id n` or `-i n` makes it use a specific TMDB ID. Does not work with directory mode.
-- You can join the short flags `-d`, `-n` and `-l` together (e.g. `-dn` or `-dln`).
-- Passing `--help` or `-h` shows help and exits.
-- Passing `--version` or `-v` shows version and exits.
+Options:
+  -d, --directory          Run in directory mode
+  -n, --dry-run            Do a dry run
+  -l, --i-feel-lucky       Always choose the first option
+  -i, --tmdb-id <INTEGER>  Use a given TMDB ID. Does not work with directory mode.
+  -v, --version            Print version
+  -h, --help               Print help
+```
 
 ## Notes
 
