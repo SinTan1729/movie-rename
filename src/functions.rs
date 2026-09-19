@@ -1,25 +1,23 @@
 use inquire::{
-    ui::{Color, IndexPrefix, RenderConfig, Styled},
     InquireError, Select,
+    ui::{Color, IndexPrefix, RenderConfig, Styled},
 };
 use std::{collections::HashMap, fs, path::Path};
 use tmdb_api::{
-    client::{reqwest::ReqwestExecutor, Client},
+    client::{Client, reqwest::ReqwestExecutor},
     movie::{details::MovieDetails, search::MovieSearch},
     prelude::Command,
 };
 use torrent_name_parser::Metadata;
 
-use crate::structs::{get_long_lang, Language, MovieEntry};
+use crate::structs::{Arguments, Language, MovieEntry, get_long_lang};
 
 // Function to process movie entries
 pub async fn process_file(
     filename: &String,
     tmdb: &Client<ReqwestExecutor>,
-    provided_id: Option<u64>,
+    args: &Arguments,
     pattern: &str,
-    dry_run: bool,
-    lucky: bool,
     movie_list: Option<&HashMap<String, Option<String>>>,
     // The last bool tells whether the entry should be added to the movie_list or not
     // The first String is filename without extension, and the second String is
@@ -86,7 +84,7 @@ pub async fn process_file(
         return (filename_without_ext, None, false);
     }
 
-    if let Some(id) = provided_id {
+    if let Some(id) = args.tmdb_id {
         println!("  Using provided TMDB ID: {id}");
         let search = MovieDetails::new(id);
         match search.execute(tmdb).await {
@@ -133,7 +131,7 @@ pub async fn process_file(
                 return (filename_without_ext, None, true);
             }
 
-            let choice = if lucky {
+            let choice = if args.i_feel_lucky {
                 // Take first choice if in lucky mode
                 movie_list.into_iter().next().unwrap()
             } else {
@@ -172,7 +170,7 @@ pub async fn process_file(
                 get_long_lang(filename_parts[1])
             );
             extension = format!("{}.{}", filename_parts[1], extension);
-        } else if lucky {
+        } else if args.i_feel_lucky {
             extension = format!("en.{extension}");
         } else {
             let lang_list = Language::generate_list();
@@ -202,7 +200,7 @@ pub async fn process_file(
     } else {
         println!("  [file] '{file_base}' -> '{new_name_with_ext}'");
         // Only do the rename of --dry-run isn't passed
-        if !dry_run {
+        if !args.dry_run {
             if !Path::new(new_name.as_str()).is_file() {
                 fs::rename(filename, new_name.as_str()).expect("  Unable to rename file!");
             } else {

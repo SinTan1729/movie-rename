@@ -1,11 +1,10 @@
 use clap_complete::generate_to;
 use clap_complete::shells::{Bash, Fish, Zsh};
-use std::env;
 use std::ffi::OsString;
 use std::fs::{create_dir, remove_dir_all};
 use std::io::Error;
 
-include!("src/args.rs");
+include!("src/cli.rs");
 
 fn main() -> Result<(), Error> {
     let target = "./target/autocomplete";

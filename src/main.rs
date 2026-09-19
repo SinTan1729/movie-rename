@@ -1,29 +1,27 @@
 use load_file::{self, load_str};
 use std::{collections::HashMap, env, fs, path::Path, process::exit};
-use tmdb_api::client::{reqwest::ReqwestExecutor, Client};
+use tmdb_api::client::{Client, reqwest::ReqwestExecutor};
 
 // Import all the modules
 mod functions;
 use functions::process_file;
 mod args;
+mod cli;
 mod structs;
 
 #[tokio::main]
 async fn main() {
     // Process the passed arguments
-    let (entries, tmdb_id, settings) = args::process_args();
-    let flag_dry_run = settings["dry-run"];
-    let flag_directory = settings["directory"];
-    let flag_lucky = settings["i-feel-lucky"];
+    let args = args::process_args();
 
     // Print some message when flags are set.
-    if flag_dry_run {
+    if args.dry_run {
         println!("Doing a dry run. No files will be modified.")
     }
-    if flag_directory {
+    if args.directory_mode {
         println!("Running in directory mode...")
     }
-    if flag_lucky {
+    if args.i_feel_lucky {
         println!("Automatically selecting the first entry...")
     }
 
@@ -53,62 +51,45 @@ async fn main() {
     let tmdb = Client::<ReqwestExecutor>::new(String::from(api_key));
 
     // Iterate over entries
-    for entry in entries {
+    for item in args.items.iter() {
         // Check if the file/directory exists on disk and run necessary commands
-        match flag_directory {
+        match args.directory_mode {
             // Normal file
             false => {
-                if Path::new(entry.as_str()).is_file() {
+                if Path::new(item.as_str()).is_file() {
                     // Process the filename for movie entries
-                    process_file(
-                        &entry,
-                        &tmdb,
-                        tmdb_id,
-                        pattern,
-                        flag_dry_run,
-                        flag_lucky,
-                        None,
-                    )
-                    .await;
+                    process_file(&item, &tmdb, &args, pattern, None).await;
                 } else {
-                    eprintln!("The file {entry} wasn't found on disk, skipping...");
+                    eprintln!("The file {item} wasn't found on disk, skipping...");
                     continue;
                 }
             }
             // Directory
             true => {
-                if Path::new(entry.as_str()).is_dir() {
-                    println!("Processing files inside the directory {entry}...");
+                if Path::new(item.as_str()).is_dir() {
+                    println!("Processing files inside the directory {item}...");
                     let mut movie_list = HashMap::new();
 
-                    if let Ok(files_in_dir) = fs::read_dir(entry.as_str()) {
+                    if let Ok(files_in_dir) = fs::read_dir(item.as_str()) {
                         let filename_list: Vec<_> = files_in_dir
                             .filter(|f| f.is_ok())
                             .map(|f| f.unwrap().path().display().to_string())
                             .collect();
                         for filename in filename_list {
                             let (filename_without_ext, movie_name_temp, add_to_list) =
-                                process_file(
-                                    &filename,
-                                    &tmdb,
-                                    tmdb_id,
-                                    pattern,
-                                    flag_dry_run,
-                                    flag_lucky,
-                                    Some(&movie_list),
-                                )
-                                .await;
+                                process_file(&filename, &tmdb, &args, pattern, Some(&movie_list))
+                                    .await;
 
                             if add_to_list {
                                 movie_list.insert(filename_without_ext, movie_name_temp);
                             }
                         }
                     } else {
-                        eprintln!("There was an error accessing the directory {entry}!");
+                        eprintln!("There was an error accessing the directory {item}!");
                         continue;
                     }
                     if movie_list.len() == 1 {
-                        let entry_clean = entry.trim_end_matches('/');
+                        let entry_clean = item.trim_end_matches('/');
                         let movie_name = movie_list.into_values().next().unwrap();
 
                         // If the file was ignored, exit
@@ -124,9 +105,9 @@ async fn main() {
                                     );
                                 } else {
                                     println!("[directory] '{entry_clean}' -> '{name}'",);
-                                    if !flag_dry_run {
+                                    if !args.dry_run {
                                         if !Path::new(name.as_str()).is_dir() {
-                                            fs::rename(entry, name)
+                                            fs::rename(item, name)
                                                 .expect("Unable to rename directory!");
                                         } else {
                                             eprintln!(
@@ -138,10 +119,10 @@ async fn main() {
                             }
                         }
                     } else {
-                        eprintln!("Could not determine how to rename the directory {entry}!");
+                        eprintln!("Could not determine how to rename the directory {item}!");
                     }
                 } else {
-                    eprintln!("The directory {entry} wasn't found on disk, skipping...");
+                    eprintln!("The directory {item} wasn't found on disk, skipping...");
                     continue;
                 }
             }

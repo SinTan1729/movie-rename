@@ -1,10 +1,19 @@
 use std::fmt;
 use tmdb_api::{
-    client::reqwest::ReqwestExecutor,
-    movie::{credits::MovieCredits, MovieBase},
-    prelude::Command,
     Client,
+    client::reqwest::ReqwestExecutor,
+    movie::{MovieBase, credits::MovieCredits},
+    prelude::Command,
 };
+
+// Struct for argumets
+pub struct Arguments {
+    pub directory_mode: bool,
+    pub dry_run: bool,
+    pub i_feel_lucky: bool,
+    pub tmdb_id: Option<u64>,
+    pub items: Vec<String>,
+}
 
 // Struct for movie entries
 #[derive(Clone)]
