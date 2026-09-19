@@ -26,10 +26,15 @@ pub fn process_args() -> Arguments {
         }
     }
 
-    args.tmdb_id = matches
-        .get_one::<String>("tmdb-id")
-        .and_then(|s| s.parse::<u64>().ok())
-        .filter(|&n| n > 0);
+    args.tmdb_id = matches.get_one::<String>("tmdb-id").map(|s| {
+        s.parse::<u64>()
+            .ok()
+            .filter(|&id| id > 0)
+            .unwrap_or_else(|| {
+                eprintln!("Invalid TMDB ID was provided.");
+                exit(1);
+            })
+    });
 
     if args.tmdb_id.is_some() && args.directory_mode {
         eprintln!("Directory mode does not support providing TMDB ID.");
