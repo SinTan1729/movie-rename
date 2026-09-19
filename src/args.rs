@@ -1,7 +1,9 @@
-use std::process::exit;
+// SPDX-FileCopyrightText: 2026 Sayantan Santra <sayantan.santra689@gmail.com>
+// SPDX-License-Identifier: GPL-3.0-only
 
 use crate::cli::get_command;
 use crate::structs::Arguments;
+use std::process::exit;
 
 // Function to process the passed arguments
 pub fn process_args() -> Arguments {

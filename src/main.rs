@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Sayantan Santra <sayantan.santra689@gmail.com>
+// SPDX-License-Identifier: GPL-3.0-only
+
 use load_file::{self, load_str};
 use std::{collections::HashMap, env, fs, path::Path, process::exit};
 use tmdb_api::client::{Client, reqwest::ReqwestExecutor};
