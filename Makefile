@@ -30,7 +30,7 @@ endif
 endif
 
 aur: build
-	tar --transform 's/.*\///g' -czf $(PKGNAME).tar.gz target/x86_64-unknown-linux-musl/release/$(PKGNAME) target/autocomplete/* $(PKGNAME).1
+	tar --transform 's/.*\///g' -czf $(PKGNAME).tar.gz target/x86_64-unknown-linux-musl/release/$(PKGNAME) target/autocomplete/* target/man/*
 
 release: aur
 	gh release create "${last_tag}" --notes "$$(git-cliff --latest)" "$(PKGNAME).tar.gz"
