@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-only
 [package]
 name = "movie-rename"
-version = "2.4.0"
+version = "2.4.1"
 build = "build.rs"
 edition = "2024"
 authors = ["Sayantan Santra <sayantan[dot]santra689[at]gmail[dot]com"]
