@@ -32,8 +32,9 @@ endif
 aur: build
 	tar --transform 's/.*\///g' -czf $(PKGNAME).tar.gz target/x86_64-unknown-linux-musl/release/$(PKGNAME) target/autocomplete/* target/man/*
 
+GH_TOKEN := $(shell cat ~/.config/github_token)
 release: aur
-	gh release create "${last_tag}" --notes "$$(git-cliff --latest)" "$(PKGNAME).tar.gz"
+	gh release create "${last_tag}" --notes "$$(git-cliff --latest --github-token ${GH_TOKEN})" "$(PKGNAME).tar.gz"
 	$(MAKE) clean
 
 .PHONY: build build-debug install clean uninstall aur tag
