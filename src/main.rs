@@ -61,7 +61,7 @@ async fn main() {
             false => {
                 if Path::new(item.as_str()).is_file() {
                     // Process the filename for movie entries
-                    process_file(&item, &tmdb, &args, pattern, None).await;
+                    process_file(item, &tmdb, &args, pattern, None).await;
                 } else {
                     eprintln!("The file {item} wasn't found on disk, skipping...");
                     continue;
